@@ -6,7 +6,6 @@ import { CustomFieldComponent } from '../../shared/components/custom-field/custo
 import { DeliveryOptions, ErrorMessages, PaymentOptions } from '../../core/constants/checkout.constants';
 import { SummaryComponent } from '../../shared/components/summary/summary.component';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 
 @Component({

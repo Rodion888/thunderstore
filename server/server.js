@@ -17,7 +17,9 @@ const __dirname = path.dirname(__filename);
 const fastify = Fastify({ logger: { level: 'info' } });
 
 fastify.register(cors, {
-  origin: 'http://localhost:4200',
+  origin: 'http://localhost',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 });
 fastify.register(FastifyCookie);
@@ -41,7 +43,7 @@ fastify.addHook('onRequest', (req, reply, done) => {
 const PORT = 3000;
 const start = async () => {
   try {
-    await fastify.listen({ port: PORT });
+    await fastify.listen({ port: PORT, host: "0.0.0.0" })
     setupWebSocket(fastify.server);
   } catch (err) {
     process.exit(1);
@@ -49,4 +51,3 @@ const start = async () => {
 };
 
 start();
-
