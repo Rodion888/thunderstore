@@ -1,0 +1,11 @@
+<app-background-video></app-background-video>
+
+<div class="page-content">
+  <div class="cards-list" (scroll)="onScroll($event)">
+    <ng-container *ngFor="let product of products()">
+      <app-card [product]="product"></app-card>
+    </ng-container>
+  </div>
+</div>
+
+<!-- <div class="loading-more" *ngIf="loadingMore() && hasMore()">Загрузка новых товаров...</div> -->

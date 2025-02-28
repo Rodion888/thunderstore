@@ -1,0 +1,63 @@
+@use 'variables' as *;
+
+.text-xs {
+  font-size: $text-size-xs;
+}
+
+.text-sm {
+  font-size: $text-size-sm;
+}
+
+.text-md {
+  font-size: $text-size-md;
+}
+
+.text-lg {
+  font-size: $text-size-lg;
+}
+
+.text-xl {
+  font-size: $text-size-xl;
+}
+
+.color-default {
+  color: $color-text-default;
+}
+
+.color-accent {
+  color: $color-text-accent;
+}
+
+.color-secondary {
+  color: $color-text-secondary;
+}
+
+.title {
+  font-size: $text-size-lg;
+  font-weight: bold;
+  color: $color-text-default;
+}
+
+.subtitle {
+  font-size: $text-size-md;
+  color: $color-text-default;
+}
+
+.text-price {
+  font-size: $text-size-sm;
+  color: $color-text-secondary;
+}
+
+.text-default {
+  font-size: $text-size-sm;
+  color: $color-text-default;
+}
+
+.text-accent {
+  font-size: $text-size-sm;
+  color: $color-text-accent;
+}
+
+.text-bold {
+  font-weight: bold;
+}

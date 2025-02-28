@@ -1,0 +1,40 @@
+<app-background-video></app-background-video>
+
+<div class="product-container" *ngIf="product">
+  <div class="image-carousel">
+    <app-button type="arrow-left" class="arrow left" (buttonClick)="prevImage()"></app-button>
+    <img [src]="currentImage" [alt]="product.name" class="product-image" (click)="openFullscreen(currentImage)"/>
+    <app-button type="arrow-right" class="arrow right" (buttonClick)="nextImage()"></app-button>
+  </div>
+
+  <div class="fullscreen-overlay" *ngIf="fullscreenImage" (click)="closeFullscreen()">
+    <img [src]="fullscreenImage" class="fullscreen-image" />
+  </div>
+
+  <div class="product-info">
+    <span class="title">{{ product.name }}</span>
+
+    <div class="product-description text-default">
+      <span>Материал: интерлок премиум 260гр</span>
+      <span>Состав: 95% хлопок, 5% эластан</span>
+      <span>Технология печати: термотрансфер </span>
+      <span>Размеры: {{ getAvailableSizesText() }}</span>
+      <span>Рост модели: 185, на модели размер L</span>
+    </div>
+
+    <span class="subtitle">Цена: <span class="color-secondary text-bold text-md">{{ product.price }}</span></span>
+
+    <div class="actions">
+      <app-custom-select
+        [label]="'Размер футболки'"
+        [options]="getAvailableSizes()"
+        [(ngModel)]="selectedSize"
+        placeholder="Выберите размер">
+      </app-custom-select>
+
+      <app-button type="btn" class="add-to-cart" [text]="'Добавить в корзину'" (buttonClick)="addToCart()"></app-button>
+    </div>
+  </div>
+</div>
+
+<!-- <p *ngIf="!product">Товар не найден</p> -->

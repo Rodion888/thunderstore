@@ -1,0 +1,71 @@
+@use '../../../../assets/styles/variables';
+
+.glow-button {
+  padding: 0.4rem 1.2rem;
+  width: 12rem;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: rgb(210 202 202);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease-in-out;
+  cursor: pointer;
+
+  .button-text {
+    position: relative;
+    font-weight: bold;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .glow {
+    content: '';
+    position: absolute;
+    top: var(--y, 50%);
+    left: var(--x, 50%);
+    width: 180px;
+    height: 160px;
+    background: radial-gradient(
+      43.3% 44.23% at 50% 49.51%,
+      #f0f0e5 29%,
+      #f4efc1 40%,
+      #f3cfbb 50%,
+      rgba(255, 170, 129, 0.3) 70%,
+      rgba(214, 211, 210, 0) 100%
+    );
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    filter: blur(5px);
+    transition: opacity 0.3s ease-in-out, transform 0.1s ease-out;
+    opacity: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  &:hover .glow {
+    opacity: 1;
+  }
+
+  &:active .glow {
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+
+  &.cross,
+  &.arrow-left,
+  &.arrow-right {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 50%;
+
+    .icon {
+      color: variables.$color-background-dark;
+      font-size: 1rem;
+      z-index: 2;
+      pointer-events: none;
+    }
+  }
+}

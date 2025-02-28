@@ -1,0 +1,19 @@
+@use 'assets/styles/index.scss';
+@use "assets/styles/variables";
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: variables.$color-background-dark;
+  letter-spacing: -.01em;
+  font-family: "Titillium Web", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  transition: background-color 0.5s ease-in-out;
+}
+
+* {
+  letter-spacing: -.01em;
+  font-family: "Titillium Web", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+}

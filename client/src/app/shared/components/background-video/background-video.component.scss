@@ -1,0 +1,22 @@
+.background-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: fill;
+  object-position: center;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+
+body.video-loaded {
+  background-color: transparent !important;
+}
+
+.video-loaded .background-video {
+  opacity: 1 !important;
+}

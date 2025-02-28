@@ -1,0 +1,13 @@
+<button class="glow-button" [ngClass]="type" (click)="handleClick()" (mousemove)="handleMouseMove($event)">
+  <span class="glow"></span>
+
+  <ng-container *ngIf="type === 'btn'; else iconButton">
+    <span class="button-text">{{ text }}</span>
+  </ng-container>
+
+  <ng-template #iconButton>
+    <span *ngIf="type === 'cross'" class="icon">✕</span>
+    <span *ngIf="type === 'arrow-left'" class="icon">&#10094;</span>
+    <span *ngIf="type === 'arrow-right'" class="icon">&#10095;</span>
+  </ng-template>
+</button>

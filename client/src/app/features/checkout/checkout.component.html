@@ -1,0 +1,87 @@
+<div class="background-container">
+  <div class="top-container">
+    <div class="tabs-container">
+      <button class="tab" [ngClass]="{ active: activeTab === 0 }" (click)="scrollToSection(0)">Тип доставки</button>
+      <button class="tab" [ngClass]="{ active: activeTab === 1 }" (click)="scrollToSection(1)">Ваши данные</button>
+      <button class="tab" [ngClass]="{ active: activeTab === 2 }" (click)="scrollToSection(2)">Способ оплаты</button>
+    </div>
+  
+    <app-summary class="cart-summary-right"></app-summary>
+  </div>
+
+  <div class="checkout-container" #checkoutForm>
+    <form [formGroup]="checkoutFormGroup">
+      <section #section0>
+        <span class="title">Тип доставки</span>
+        <div class="delivery-options text-default">
+          <label *ngFor="let option of deliveryOptions">
+            <input type="radio" formControlName="deliveryType" [value]="option.value" />
+            {{ option.label }}
+          </label>
+        </div>
+        <div *ngIf="getErrorMessage('deliveryType')" class="error-message">
+          Выберите тип доставки
+        </div>
+      </section>
+
+      <section #section1>
+        <div class="title">Ваши данные</div>
+        <div class="user-data">
+          <app-custom-field
+            formControlName="fullName"
+            label="Полное имя"
+            placeholder="Ф.И.О"
+            [errorMessage]="getErrorMessage('fullName')">
+          </app-custom-field>
+          <app-custom-field
+            formControlName="phone"
+            label="Телефон"
+            placeholder="Введите ваш номер телефона"
+            [errorMessage]="getErrorMessage('phone')">
+          </app-custom-field>
+          <app-custom-field
+            formControlName="email"
+            label="Email"
+            placeholder="Введите вашу электронную почту"
+            [errorMessage]="getErrorMessage('email')">
+          </app-custom-field>
+          <app-custom-field
+            formControlName="city"
+            label="Город доставки"
+            placeholder="Введите ваш город"
+            [errorMessage]="getErrorMessage('city')">
+          </app-custom-field>
+          <app-custom-field
+            formControlName="address"
+            label="Адрес доставки"
+            placeholder="Введите ваш адрес"
+            [errorMessage]="getErrorMessage('address')">
+          </app-custom-field>
+          <app-custom-field
+            formControlName="comment"
+            label="Комментарий"
+            placeholder="Дополнительная информация">
+          </app-custom-field>
+        </div>
+      </section>      
+
+      <section #section2>
+        <div class="title">Способы оплаты</div>
+        <div class="payment-options text-default">
+          <label *ngFor="let option of paymentOptions">
+            <input type="radio" formControlName="paymentMethod" [value]="option.value" />
+            {{ option.label }}
+          </label>
+        </div>
+        <div *ngIf="getErrorMessage('paymentMethod')" class="error-message">
+          Выберите способ оплаты
+        </div>
+        <span class="text-xs color-default">*Если Вы не оплатили заказ в течение 20 минут, он аннулируется</span>
+      </section>
+    </form>
+  </div>
+
+  <div class="footer">
+    <app-button type="btn" [text]="'Продолжить'" (buttonClick)="continueCheckout()"></app-button>
+  </div>
+</div>
