@@ -17,7 +17,7 @@ const __dirname = path.dirname(__filename);
 const fastify = Fastify({ logger: { level: 'info' } });
 
 fastify.register(cors, {
-  origin: 'http://localhost',
+  origin: process.env.CORS_ORIGIN || 'http://localhost:4200',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
