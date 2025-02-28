@@ -12,7 +12,6 @@ export async function createPayment(amount, description) {
     const paymentData = {
       amount: { value: amount.toFixed(2), currency: 'RUB' },
       payment_method_data: { type: 'bank_card' },
-      confirmation: { type: 'redirect', return_url: 'http://localhost:4200/success' },
       capture: true,
       description,
       test: true,

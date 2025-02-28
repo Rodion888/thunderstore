@@ -3,6 +3,7 @@ import { CartItem } from '../types/cart.types';
 import { Product } from '../types/product.types';
 import { HttpClient } from '@angular/common/http';
 import { WebSocketService } from './ws.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,7 @@ import { WebSocketService } from './ws.service';
 export class CartService {
   private http = inject(HttpClient);
   private wsService = inject(WebSocketService);
-  private apiUrl = 'http://localhost:3000/cart';
+  private apiUrl = `${environment.apiUrl}/cart`;
 
   cartItems = signal<CartItem[]>([]);
 
@@ -31,7 +32,7 @@ export class CartService {
       size,
       quantity: 1,
     }, { withCredentials: true }).subscribe({
-      error: error => console.error('❌ Ошибка добавления в корзину:', error),
+      error: error => console.error(error),
     });
   }
 
@@ -41,14 +42,14 @@ export class CartService {
       size: item.size,
       quantity: 1,
     }, { withCredentials: true }).subscribe({
-      error: error => console.error('❌ Ошибка удаления из корзины:', error),
+      error: error => console.error(error),
     });
   }
 
   clearCart() {
     return this.http.post(`${this.apiUrl}/clear`, {}, { withCredentials: true })
       .subscribe({
-        error: error => console.error('❌ Ошибка очистки корзины:', error),
+        error: error => console.error(error),
       });
   }
 
@@ -58,7 +59,7 @@ export class CartService {
         next: cart => {
           this.cartItems.set(cart ?? []);
         },
-        error: error => console.error('❌ Ошибка загрузки корзины:', error),
+        error: error => console.error(error),
       });
   }
 

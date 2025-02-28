@@ -11,17 +11,23 @@ import paymentRoutes from './routes/payment.js';
 import { setupWebSocket } from './wsServer.js';
 import { fileURLToPath } from 'url';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const fastify = Fastify({ logger: { level: 'info' } });
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:4200';
 
 fastify.register(cors, {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:4200',
+  origin: CORS_ORIGIN,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 });
+
 fastify.register(FastifyCookie);
 fastify.register(FastifyStatic, { root: path.join(__dirname, 'storage/images'), prefix: '/static/' });
 fastify.register(productRoutes);
@@ -43,7 +49,7 @@ fastify.addHook('onRequest', (req, reply, done) => {
 const PORT = 3000;
 const start = async () => {
   try {
-    await fastify.listen({ port: PORT, host: "0.0.0.0" })
+    await fastify.listen({ port: PORT, host: "0.0.0.0" });
     setupWebSocket(fastify.server);
   } catch (err) {
     process.exit(1);
