@@ -10,6 +10,9 @@ services:
       - "3000:3000"
     env_file:
       - ./server/.env
+    environment:
+      - SERVER_URL=${SERVER_URL}
+      - CORS_ORIGIN=${CORS_ORIGIN}
 
   frontend:
     build: ./client
