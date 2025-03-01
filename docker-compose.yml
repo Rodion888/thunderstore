@@ -3,9 +3,6 @@ services:
   backend:
     build:
       context: ./server
-      args:
-        SERVER_URL: ${SERVER_URL}
-        CORS_ORIGIN: ${CORS_ORIGIN}
     ports:
       - "3000:3000"
     env_file:
