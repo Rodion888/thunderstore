@@ -42,6 +42,8 @@ fastify.register(cartRoutes);
 fastify.register(paymentRoutes);
 
 fastify.addHook('onRequest', (req, reply, done) => {
+  console.log("Cookies:", req.cookies);
+
   if (!req.cookies.sessionId) {
     const sessionId = crypto.randomUUID();
     reply.setCookie('sessionId', sessionId, {
@@ -49,7 +51,9 @@ fastify.addHook('onRequest', (req, reply, done) => {
       httpOnly: true,
       sameSite: 'strict'
     });
+    console.log("New sessionId:", sessionId);
   }
+
   done();
 });
 
