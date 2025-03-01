@@ -1,12 +1,14 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { Subject } from "rxjs";
 import { WsData } from "../types/ws.types";
-import { environment } from "../../../environments/environment";
+import { ConfigService } from "./config.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class WebSocketService {
+  private config = inject(ConfigService);
+
   private socket!: WebSocket;
   private eventsSubject = new Subject<WsData>();
 
@@ -17,7 +19,7 @@ export class WebSocketService {
   }
 
   private connectWebSocket() {
-    this.socket = new WebSocket(environment.wsUrl);
+    this.socket = new WebSocket(this.config.wsUrl);
 
     this.socket.onmessage = (event) => {
       const data: WsData = JSON.parse(event.data);

@@ -3,7 +3,7 @@ import { CartItem } from '../types/cart.types';
 import { Product } from '../types/product.types';
 import { HttpClient } from '@angular/common/http';
 import { WebSocketService } from './ws.service';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +11,9 @@ import { environment } from '../../../environments/environment';
 export class CartService {
   private http = inject(HttpClient);
   private wsService = inject(WebSocketService);
-  private apiUrl = `${environment.apiUrl}/cart`;
+  private config = inject(ConfigService);
+
+  private apiUrl = `${this.config.apiUrl}/cart`;
 
   cartItems = signal<CartItem[]>([]);
 

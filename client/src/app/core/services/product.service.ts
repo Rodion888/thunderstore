@@ -1,15 +1,16 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable, inject, signal } from "@angular/core";
 import { Product } from "../types/product.types";
-import { environment } from "../../../environments/environment";
+import { ConfigService } from "./config.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
   private http = inject(HttpClient);
+  private config = inject(ConfigService);
 
-  private apiUrl = `${environment.apiUrl}/products`;
+  private apiUrl = `${this.config.apiUrl}/products`;
   private page = 1;
   private limit = 10;
   private totalProducts = 0;
