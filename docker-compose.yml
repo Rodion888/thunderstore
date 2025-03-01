@@ -1,19 +1,28 @@
-version: "3"
+version: "3.8"
 services:
   backend:
     build:
       context: ./server
     ports:
       - "3000:3000"
+      - "3001:3001"
     env_file:
       - ./server/.env
     environment:
       - SERVER_URL=${SERVER_URL}
       - CORS_ORIGIN=${CORS_ORIGIN}
+    volumes:
+      - ./server/storage/images:/app/storage/images
+      - ./server/storage/storages:/app/storage/storages
+    restart: unless-stopped
 
   frontend:
-    build: ./client
+    build:
+      context: ./client
     ports:
       - "80:80"
     depends_on:
       - backend
+    volumes:
+      - ./client/dist:/usr/share/nginx/html
+    restart: unless-stopped

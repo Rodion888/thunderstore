@@ -23,10 +23,7 @@ export async function createPayment(amount, description) {
     });
 
     return { payment_url: response.data.confirmation.confirmation_url };
-  } catch (error) {
-    console.error('Ошибка при создании платежа:', error.response?.data || error.message);
-    throw new Error('Ошибка при создании платежа');
-  }
+  } catch (error) {}
 }
 
 
