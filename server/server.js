@@ -47,11 +47,15 @@ fastify.addHook('onRequest', (req, reply, done) => {
 });
 
 const PORT = 3000;
+const HOST = "0.0.0.0";
+
 const start = async () => {
   try {
-    await fastify.listen({ port: PORT, host: "0.0.0.0" });
+    await fastify.listen({ port: PORT, host: HOST });
+    console.log(`🚀 Server running at http://${HOST}:${PORT}`);
     setupWebSocket(fastify.server);
   } catch (err) {
+    console.error(err);
     process.exit(1);
   }
 };
