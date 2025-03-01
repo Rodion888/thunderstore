@@ -24,8 +24,8 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:4200';
 
 let products = productsRaw;
 products.forEach(product => {
-  product.images.front = product.images.front.replace('http://localhost:3000', SERVER_URL);
-  product.images.back = product.images.back.replace('http://localhost:3000', SERVER_URL);
+  product.images.front = `${SERVER_URL}${product.images.front}`;
+  product.images.back = `${SERVER_URL}${product.images.back}`;
 });
 
 fastify.register(cors, {
