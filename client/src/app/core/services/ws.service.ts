@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { Subject } from "rxjs";
 import { WsData } from "../types/ws.types";
+import { environment } from "../../../environments/environment";
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +17,7 @@ export class WebSocketService {
   }
 
   private connectWebSocket() {
-    this.socket = new WebSocket('ws://localhost:3000/ws/cart');
+    this.socket = new WebSocket(environment.wsUrl);
 
     this.socket.onmessage = (event) => {
       const data: WsData = JSON.parse(event.data);
