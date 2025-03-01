@@ -7,11 +7,12 @@ import crypto from 'crypto';
 import productRoutes from './routes/products.js';
 import cartRoutes from './routes/cart.js';
 import paymentRoutes from './routes/payment.js';
+import productsRaw from './storage/products.json' assert { type: "json" };
+import dotenv from 'dotenv';
 
 import { setupWebSocket } from './wsServer.js';
 import { fileURLToPath } from 'url';
 
-import dotenv from 'dotenv';
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,6 +21,12 @@ const __dirname = path.dirname(__filename);
 const fastify = Fastify({ logger: { level: 'info' } });
 const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:4200';
+
+let products = productsRaw;
+products.forEach(product => {
+  product.images.front = product.images.front.replace('http://localhost:3000', SERVER_URL);
+  product.images.back = product.images.back.replace('http://localhost:3000', SERVER_URL);
+});
 
 fastify.register(cors, {
   origin: CORS_ORIGIN,
