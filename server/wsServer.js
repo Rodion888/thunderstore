@@ -10,11 +10,12 @@ export function setupWebSocket(server) {
   wss.on('connection', (ws, req) => {
     const sessionId = req.headers.cookie?.match(/sessionId=([^;]*)/)?.[1];
 
-    if (!sessionId) {
-      ws.close();
-      return;
-    }
-  
+    // if (!sessionId) {
+    //   ws.close();
+    //   return;
+    // }
+    console.log("Incoming WebSocket headers:", req.headers);
+
     clients.set(sessionId, ws);
   
     ws.on('close', () => {

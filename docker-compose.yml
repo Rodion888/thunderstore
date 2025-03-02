@@ -13,6 +13,7 @@ services:
       - ./server/.env.production
     networks:
       - app-network
+    network_mode: "host"
 
   frontend:
     build:
