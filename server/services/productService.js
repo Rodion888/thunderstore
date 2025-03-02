@@ -54,8 +54,8 @@ export async function loadProducts() {
     return products.map(product => ({
       ...product,
       images: {
-        front: `${SERVER_URL}/static${product.images.front.replace('/static', '')}`,
-        back: `${SERVER_URL}/static${product.images.back.replace('/static', '')}`,
+        front: product.images.front.startsWith('http') ? product.images.front : `${SERVER_URL}${product.images.front}`,
+        back: product.images.back.startsWith('http') ? product.images.back : `${SERVER_URL}${product.images.back}`,
       }
     }));
   } catch (error) {
@@ -63,6 +63,7 @@ export async function loadProducts() {
     return [];
   }
 }
+
 
 export async function updateProductsFile(products) {
   try {
