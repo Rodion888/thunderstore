@@ -4,8 +4,8 @@
     "name": "Футболка Черная",
     "type": "t-shirt",
     "images": {
-      "front": "/static/first-t-front.webp",
-      "back": "/static/first-t-back.webp"
+      "front": "http://localhost:3000/static/first-t-front.webp",
+      "back": "http://localhost:3000/static/first-t-back.webp"
     },
     "price": 1400,
     "stock": {
@@ -20,12 +20,12 @@
     "name": "Футболка Белая",
     "type": "t-shirt",
     "images": {
-      "front": "/static/second-t-front.webp",
-      "back": "/static/second-t-back.webp"
+      "front": "http://localhost:3000/static/second-t-front.webp",
+      "back": "http://localhost:3000/static/second-t-back.webp"
     },
     "price": 1450,
     "stock": {
-      "S": 5,
+      "S": 4,
       "M": 9,
       "L": 7,
       "XL": 10
@@ -36,8 +36,8 @@
     "name": "Футболка Фиолетовая",
     "type": "t-shirt",
     "images": {
-      "front": "/static/second-t-front.webp",
-      "back": "/static/second-t-back.webp"
+      "front": "http://localhost:3000/static/second-t-front.webp",
+      "back": "http://localhost:3000/static/second-t-back.webp"
     },
     "price": 1500,
     "stock": {
@@ -52,8 +52,8 @@
     "name": "Футболка Красная",
     "type": "t-shirt",
     "images": {
-      "front": "/static/first-t-front.webp",
-      "back": "/static/first-t-back.webp"
+      "front": "http://localhost:3000/static/first-t-front.webp",
+      "back": "http://localhost:3000/static/first-t-back.webp"
     },
     "price": 1550,
     "stock": {
@@ -68,8 +68,8 @@
     "name": "Футболка Черная",
     "type": "t-shirt",
     "images": {
-      "front": "/static/first-t-front.webp",
-      "back": "/static/first-t-back.webp"
+      "front": "http://localhost:3000/static/first-t-front.webp",
+      "back": "http://localhost:3000/static/first-t-back.webp"
     },
     "price": 1400,
     "stock": {
@@ -84,8 +84,8 @@
     "name": "Футболка Белая",
     "type": "t-shirt",
     "images": {
-      "front": "/static/second-t-front.webp",
-      "back": "/static/second-t-back.webp"
+      "front": "http://localhost:3000/static/second-t-front.webp",
+      "back": "http://localhost:3000/static/second-t-back.webp"
     },
     "price": 1450,
     "stock": {
@@ -100,8 +100,8 @@
     "name": "Футболка Фиолетовая",
     "type": "t-shirt",
     "images": {
-      "front": "/static/first-t-front.webp",
-      "back": "/static/first-t-back.webp"
+      "front": "http://localhost:3000/static/first-t-front.webp",
+      "back": "http://localhost:3000/static/first-t-back.webp"
     },
     "price": 1500,
     "stock": {
@@ -116,8 +116,8 @@
     "name": "Футболка Красная",
     "type": "t-shirt",
     "images": {
-      "front": "/static/second-t-front.webp",
-      "back": "/static/second-t-back.webp"
+      "front": "http://localhost:3000/static/second-t-front.webp",
+      "back": "http://localhost:3000/static/second-t-back.webp"
     },
     "price": 1550,
     "stock": {
@@ -132,8 +132,8 @@
     "name": "Футболка Черная",
     "type": "t-shirt",
     "images": {
-      "front": "/static/second-t-front.webp",
-      "back": "/static/second-t-back.webp"
+      "front": "http://localhost:3000/static/second-t-front.webp",
+      "back": "http://localhost:3000/static/second-t-back.webp"
     },
     "price": 1400,
     "stock": {
@@ -148,8 +148,8 @@
     "name": "Футболка Белая",
     "type": "t-shirt",
     "images": {
-      "front": "/static/second-t-front.webp",
-      "back": "/static/second-t-back.webp"
+      "front": "http://localhost:3000/static/second-t-front.webp",
+      "back": "http://localhost:3000/static/second-t-back.webp"
     },
     "price": 1450,
     "stock": {
@@ -164,8 +164,8 @@
     "name": "Футболка Фиолетовая",
     "type": "t-shirt",
     "images": {
-      "front": "/static/second-t-front.webp",
-      "back": "/static/second-t-back.webp"
+      "front": "http://localhost:3000/static/second-t-front.webp",
+      "back": "http://localhost:3000/static/second-t-back.webp"
     },
     "price": 1500,
     "stock": {
@@ -180,8 +180,8 @@
     "name": "Футболка Красная",
     "type": "t-shirt",
     "images": {
-      "front": "/static/first-t-front.webp",
-      "back": "/static/first-t-back.webp"
+      "front": "http://localhost:3000/static/first-t-front.webp",
+      "back": "http://localhost:3000/static/first-t-back.webp"
     },
     "price": 1550,
     "stock": {
@@ -196,8 +196,8 @@
     "name": "Футболка Черная",
     "type": "t-shirt",
     "images": {
-      "front": "/static/second-t-front.webp",
-      "back": "/static/second-t-back.webp"
+      "front": "http://localhost:3000/static/second-t-front.webp",
+      "back": "http://localhost:3000/static/second-t-back.webp"
     },
     "price": 1400,
     "stock": {
@@ -212,8 +212,8 @@
     "name": "Футболка Белая",
     "type": "t-shirt",
     "images": {
-      "front": "/static/first-t-front.webp",
-      "back": "/static/first-t-back.webp"
+      "front": "http://localhost:3000/static/first-t-front.webp",
+      "back": "http://localhost:3000/static/first-t-back.webp"
     },
     "price": 1450,
     "stock": {

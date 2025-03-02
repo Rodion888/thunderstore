@@ -7,26 +7,20 @@ import crypto from 'crypto';
 import productRoutes from './routes/products.js';
 import cartRoutes from './routes/cart.js';
 import paymentRoutes from './routes/payment.js';
-import productsRaw from './storage/products.json' assert { type: "json" };
 import dotenv from 'dotenv';
 
 import { setupWebSocket } from './wsServer.js';
 import { fileURLToPath } from 'url';
 
-dotenv.config();
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+dotenv.config({ path: envFile });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const fastify = Fastify({ logger: { level: 'info' } });
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:4200';
 
-let products = productsRaw;
-products.forEach(product => {
-  product.images.front = `${SERVER_URL}${product.images.front}`;
-  product.images.back = `${SERVER_URL}${product.images.back}`;
-});
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:4200';
 
 fastify.register(cors, {
   origin: CORS_ORIGIN,
@@ -42,8 +36,6 @@ fastify.register(cartRoutes);
 fastify.register(paymentRoutes);
 
 fastify.addHook('onRequest', (req, reply, done) => {
-  console.log("Cookies:", req.cookies);
-
   if (!req.cookies.sessionId) {
     const sessionId = crypto.randomUUID();
     reply.setCookie('sessionId', sessionId, {
@@ -51,7 +43,6 @@ fastify.addHook('onRequest', (req, reply, done) => {
       httpOnly: true,
       sameSite: 'strict'
     });
-    console.log("New sessionId:", sessionId);
   }
 
   done();
@@ -63,7 +54,6 @@ const HOST = "0.0.0.0";
 const start = async () => {
   try {
     await fastify.listen({ port: PORT, host: HOST });
-    console.log(`🚀 Server running at http://${HOST}:${PORT}`);
     setupWebSocket(fastify.server);
   } catch (err) {
     console.error(err);

@@ -1,25 +1,32 @@
-version: "3"
+version: '3.8'
+
 services:
   backend:
     build:
       context: ./server
+      dockerfile: Dockerfile
+    container_name: backend
+    restart: always
     ports:
       - "3000:3000"
     env_file:
-      - ./server/.env
-    environment:
-      - SERVER_URL=${SERVER_URL}
-      - CORS_ORIGIN=${CORS_ORIGIN}
-    volumes:
-      - ./server/storage/images:/app/storage/images
-      - ./server/storage/storages:/app/storage/storages
-    restart: unless-stopped
+      - ./server/.env.production
+    networks:
+      - app-network
 
   frontend:
     build:
       context: ./client
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: always
     ports:
       - "80:80"
     depends_on:
       - backend
-    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,17 +1,27 @@
-import { Injectable, inject, signal } from '@angular/core';
-import { CONFIG_TOKEN } from '../tokens/config.token';
+import { Injectable, InjectionToken, inject } from '@angular/core';
+import { environment } from '../../../environments/environment';
+
+export interface AppConfig {
+  apiUrl: string;
+  wsUrl: string;
+}
+
+export const CONFIG_TOKEN = new InjectionToken<AppConfig>('CONFIG_TOKEN', {
+  providedIn: 'root',
+  factory: () => environment
+});
 
 @Injectable({
   providedIn: 'root',
 })
 export class ConfigService {
-  private readonly configSignal = signal(inject(CONFIG_TOKEN));
+  private readonly config = inject(CONFIG_TOKEN);
 
   get apiUrl(): string {
-    return this.configSignal().apiUrl;
+    return this.config.apiUrl;
   }
 
   get wsUrl(): string {
-    return this.configSignal().wsUrl;
+    return this.config.wsUrl;
   }
 }

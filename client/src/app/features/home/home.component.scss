@@ -34,6 +34,7 @@
 }
 
 .cards-list {
+  width: 100%;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
@@ -94,4 +95,10 @@
     gap: 0.4rem;
     justify-content: center;
   }
+}
+
+.no-items {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
