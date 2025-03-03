@@ -44,11 +44,11 @@ services:
       - "3000:3000"
     env_file:
       - ./server/.env.production
-    networks:
-      - app-network
     volumes:
       - /etc/letsencrypt/live/thunder-store.ru:/etc/letsencrypt/live/thunder-store.ru
       - /etc/letsencrypt/archive/thunder-store.ru:/etc/letsencrypt/archive/thunder-store.ru
+    networks:
+      - app-network
 
   frontend:
     build:
@@ -58,10 +58,13 @@ services:
     restart: always
     depends_on:
       - backend
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    ports:
+      - "80:80"
+      - "443:443"
     networks:
       - app-network
-    volumes:
-    - /etc/letsencrypt:/etc/letsencrypt:ro
 
 networks:
   app-network:
