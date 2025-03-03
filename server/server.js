@@ -18,7 +18,15 @@ dotenv.config({ path: envFile });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const fastify = Fastify({ logger: { level: 'info' } });
+const httpsOptions = {
+  key: fs.readFileSync("/etc/letsencrypt/live/thunder-store.ru/privkey.pem"),
+  cert: fs.readFileSync("/etc/letsencrypt/live/thunder-store.ru/fullchain.pem"),
+};
+
+const fastify = Fastify({
+  logger: { level: 'info' },
+  https: httpsOptions,
+});
 
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:4200';
 
