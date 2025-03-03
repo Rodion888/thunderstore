@@ -31,7 +31,6 @@ export async function loadProducts() {
   }
 }
 
-
 export async function updateProductsFile(products) {
   try {
     await fs.writeFile(productsFilePath, JSON.stringify(products, null, 2));

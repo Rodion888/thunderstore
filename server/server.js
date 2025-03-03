@@ -32,7 +32,10 @@ fastify.register(cors, {
 });
 
 fastify.register(FastifyCookie);
-fastify.register(FastifyStatic, { root: path.join(__dirname, 'storage/images'), prefix: '/static/' });
+fastify.register(FastifyStatic, {
+  root: path.join(__dirname, '../storage/images'),
+  prefix: '/static/',
+});
 fastify.register(productRoutes);
 fastify.register(cartRoutes);
 fastify.register(paymentRoutes);
