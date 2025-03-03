@@ -8,6 +8,7 @@ import productRoutes from './routes/products.js';
 import cartRoutes from './routes/cart.js';
 import paymentRoutes from './routes/payment.js';
 import dotenv from 'dotenv';
+import fs from "fs";
 
 import { setupWebSocket } from './wsServer.js';
 import { fileURLToPath } from 'url';
