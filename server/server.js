@@ -19,14 +19,14 @@ dotenv.config({ path: envFile });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const httpsOptions = {
-  key: fs.readFileSync("/etc/letsencrypt/live/thunder-store.ru/privkey.pem"),
-  cert: fs.readFileSync("/etc/letsencrypt/live/thunder-store.ru/fullchain.pem"),
-};
+// const httpsOptions = {
+//   key: fs.readFileSync("/etc/letsencrypt/live/thunder-store.ru/privkey.pem"),
+//   cert: fs.readFileSync("/etc/letsencrypt/live/thunder-store.ru/fullchain.pem"),
+// };
 
 const fastify = Fastify({
   logger: { level: 'info' },
-  https: httpsOptions,
+  // https: httpsOptions,
 });
 
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:4200';
@@ -50,7 +50,8 @@ fastify.addHook('onRequest', (req, reply, done) => {
     reply.setCookie('sessionId', sessionId, {
       path: '/',
       httpOnly: true,
-      sameSite: 'strict'
+      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production',
     });
   }
 
@@ -65,7 +66,6 @@ const start = async () => {
     await fastify.listen({ port: PORT, host: HOST });
     setupWebSocket(fastify.server);
   } catch (err) {
-    console.error(err);
     process.exit(1);
   }
 };
