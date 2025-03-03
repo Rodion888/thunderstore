@@ -46,6 +46,9 @@ services:
       - ./server/.env.production
     networks:
       - app-network
+    volumes:
+      - /etc/letsencrypt/live/thunder-store.ru:/etc/letsencrypt/live/thunder-store.ru
+      - /etc/letsencrypt/archive/thunder-store.ru:/etc/letsencrypt/archive/thunder-store.ru
 
   frontend:
     build:
