@@ -1,3 +1,48 @@
+# name: Deploy ThunderStore
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v3
+
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: 18
+
+#       - name: Connect to server and deploy
+#         uses: appleboy/ssh-action@master
+#         with:
+#           host: ${{ secrets.SSH_HOST }}
+#           username: ${{ secrets.SSH_USER }}
+#           key: ${{ secrets.SSH_KEY }}
+#           script: |
+#             cd /var/www/thunder-store
+
+#             echo "Updating repository"
+#             git pull origin main
+
+#             echo "Creating .env file for server"
+#             echo "SERVER_URL=${{ secrets.SERVER_URL }}" > server/.env
+#             echo "CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}" >> server/.env
+
+#             echo "Updating Angular env.js"
+#             echo "window.env = { NG_APP_API_URL: '${{ secrets.NG_APP_API_URL }}', NG_APP_WS_URL: '${{ secrets.NG_APP_WS_URL }}' };" > client/dist/assets/env.js
+
+#             echo "Rebuilding and restarting containers"
+#             docker-compose down
+#             docker-compose build
+#             docker-compose up -d
+
+#             echo "Deployment completed successfully!"
+
 name: Deploy ThunderStore
 
 on:
@@ -32,6 +77,9 @@ jobs:
             echo "Creating .env file for server"
             echo "SERVER_URL=${{ secrets.SERVER_URL }}" > server/.env
             echo "CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}" >> server/.env
+
+            echo "NG_APP_API_URL=${{ secrets.NG_APP_API_URL }}" >> server/.env
+            echo "NG_APP_WS_URL=${{ secrets.NG_APP_WS_URL }}" >> server/.env
 
             echo "Updating Angular env.js"
             echo "window.env = { NG_APP_API_URL: '${{ secrets.NG_APP_API_URL }}', NG_APP_WS_URL: '${{ secrets.NG_APP_WS_URL }}' };" > client/dist/assets/env.js
