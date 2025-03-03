@@ -8,7 +8,6 @@ import productRoutes from './routes/products.js';
 import cartRoutes from './routes/cart.js';
 import paymentRoutes from './routes/payment.js';
 import dotenv from 'dotenv';
-import fs from "fs";
 
 import { setupWebSocket } from './wsServer.js';
 import { fileURLToPath } from 'url';
@@ -19,14 +18,8 @@ dotenv.config({ path: envFile });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// const httpsOptions = {
-//   key: fs.readFileSync("/etc/letsencrypt/live/thunder-store.ru/privkey.pem"),
-//   cert: fs.readFileSync("/etc/letsencrypt/live/thunder-store.ru/fullchain.pem"),
-// };
-
 const fastify = Fastify({
   logger: { level: 'info' },
-  // https: httpsOptions,
 });
 
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:4200';
