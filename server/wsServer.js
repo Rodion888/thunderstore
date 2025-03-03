@@ -5,7 +5,7 @@ import carts from './storage/storages/cartsStorage.js';
 export const clients = new Map();
 
 export function setupWebSocket(server) {
-  const wss = new WebSocketServer({ server, path: "/ws" });
+  const wss = new WebSocketServer({ server });
 
   wss.on('connection', (ws, req) => {
     const sessionId = req.headers.cookie?.match(/sessionId=([^;]*)/)?.[1];

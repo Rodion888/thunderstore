@@ -1,15 +1,5 @@
-import { Injectable, InjectionToken, inject } from '@angular/core';
-import { environment } from '../../../environments/environment';
-
-export interface AppConfig {
-  apiUrl: string;
-  wsUrl: string;
-}
-
-export const CONFIG_TOKEN = new InjectionToken<AppConfig>('CONFIG_TOKEN', {
-  providedIn: 'root',
-  factory: () => environment
-});
+import { Injectable, inject } from '@angular/core';
+import { CONFIG_TOKEN } from '../tokens/config.token';
 
 @Injectable({
   providedIn: 'root',
@@ -25,3 +15,5 @@ export class ConfigService {
     return this.config.wsUrl;
   }
 }
+
+
