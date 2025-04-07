@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const productsFilePath = path.join(__dirname, '../storage/products.json');
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
+// const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
 
 export async function loadProducts() {
   try {
@@ -21,8 +21,8 @@ export async function loadProducts() {
     const mapedProducts = products.map(product => ({
       ...product,
       images: {
-        front: product.images.front.startsWith('http') ? product.images.front : `${SERVER_URL}${product.images.front}`,
-        back: product.images.back.startsWith('http') ? product.images.back : `${SERVER_URL}${product.images.back}`,
+        front: product.images.front,
+        back: product.images.back,
       }
     }));
 
