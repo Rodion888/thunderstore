@@ -13,15 +13,10 @@ const __dirname = path.dirname(__filename);
 const productsFilePath = path.join(__dirname, '../storage/products.json');
 const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
 
-console.log('productsFilePath', productsFilePath);
-console.log('SERVER_URL', SERVER_URL);
-
 export async function loadProducts() {
   try {
     const data = await fs.readFile(productsFilePath, 'utf-8');
     const products = JSON.parse(data);
-
-    console.log('products', products);
 
     const mapedProducts = products.map(product => ({
       ...product,
@@ -30,8 +25,6 @@ export async function loadProducts() {
         back: product.images.back.startsWith('http') ? product.images.back : `${SERVER_URL}${product.images.back}`,
       }
     }));
-
-    console.log('mapedProducts', mapedProducts);
 
     return mapedProducts
   } catch (error) {

@@ -20,8 +20,10 @@ export class BackgroundVideoComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.backgroundService.getVideo().subscribe((src) => {
-      if (src) this.videoSrc = src;
-      this.cd.detectChanges();
+      if (src) {
+        this.videoSrc = src;
+        this.cd.detectChanges();
+      }
     });
   }
 

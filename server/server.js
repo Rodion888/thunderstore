@@ -22,6 +22,11 @@ const fastify = Fastify({
   logger: { level: 'info' },
 });
 
+fastify.register(FastifyStatic, {
+  root: path.join(__dirname, 'storage/images'),
+  prefix: '/static/',
+});
+
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:4200';
 
 fastify.register(cors, {
@@ -32,10 +37,6 @@ fastify.register(cors, {
 });
 
 fastify.register(FastifyCookie);
-fastify.register(FastifyStatic, {
-  root: path.join(__dirname, 'storage/images'),
-  prefix: '/static/',
-});
 fastify.register(productRoutes);
 fastify.register(cartRoutes);
 fastify.register(paymentRoutes);
