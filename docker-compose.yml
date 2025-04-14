@@ -12,8 +12,7 @@ services:
     env_file:
       - ./server/.env.production
     volumes:
-      - /etc/letsencrypt/live/thunder-store.ru:/etc/letsencrypt/live/thunder-store.ru
-      - /etc/letsencrypt/archive/thunder-store.ru:/etc/letsencrypt/archive/thunder-store.ru
+      - ${SSL_CERTS_PATH:-/dev/null}:/etc/letsencrypt
     networks:
       - app-network
 
@@ -26,7 +25,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ${SSL_CERTS_PATH:-/dev/null}:/etc/letsencrypt:ro
     ports:
       - "80:80"
       - "443:443"

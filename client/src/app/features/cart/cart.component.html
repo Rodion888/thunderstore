@@ -5,15 +5,23 @@
 </div>
 
 <div class="cart-container">
-  <div *ngFor="let item of cartItems()" class="cart-item">
-    <img class="cart-image" [src]="item.images.front" alt="{{ item.name }}">
-    <div class="cart-details">
-      <span class="item-name text-bold text-default">{{ item.name }} <span class="text-price">({{ item.size }})</span></span>
-      <span class="item-quantity text-default">Количество: <span class="quantity-value text-accent">{{ item.quantity }}</span></span>
-      <span class="item-price text-default">Цена: <span class="item-size text-price">{{ item.price }}</span></span>
+  <ng-container *ngIf="cartItems().length > 0; else emptyCart">
+    <div *ngFor="let item of cartItems()" class="cart-item">
+      <img class="cart-image" [src]="item.images.front" alt="{{ item.name }}">
+      <div class="cart-details">
+        <span class="item-name text-bold text-default">{{ item.name }} <span class="text-price">({{ item.size }})</span></span>
+        <span class="item-quantity text-default">Количество: <span class="quantity-value text-accent">{{ item.quantity }}</span></span>
+        <span class="item-price text-default">Цена: <span class="item-size text-price">{{ item.price }}</span></span>
+      </div>
+      <app-button type="cross" (buttonClick)="removeFromCart(item)"></app-button>
     </div>
-    <app-button type="cross" (buttonClick)="removeFromCart(item)"></app-button>
-  </div>
+  </ng-container>
+
+  <ng-template #emptyCart>
+    <div class="empty-cart-message">
+      <span class="text-default">Ваша корзина пуста</span>
+    </div>
+  </ng-template>
 </div>
 
 <div class="footer">

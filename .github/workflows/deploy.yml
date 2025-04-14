@@ -30,11 +30,21 @@ jobs:
             git pull origin main
 
             echo "Creating .env file for server"
+            # Сервер и CORS
             echo "SERVER_URL=${{ secrets.SERVER_URL }}" > server/.env
             echo "CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}" >> server/.env
-
-            echo "NG_APP_API_URL=${{ secrets.NG_APP_API_URL }}" >> server/.env
-            echo "NG_APP_WS_URL=${{ secrets.NG_APP_WS_URL }}" >> server/.env
+            
+            # PostgreSQL
+            echo "PGUSER=${{ secrets.PG_USER }}" >> server/.env
+            echo "PGHOST=${{ secrets.PG_HOST }}" >> server/.env
+            echo "PGDATABASE=${{ secrets.PG_DATABASE }}" >> server/.env
+            echo "PGPASSWORD=${{ secrets.PG_PASSWORD }}" >> server/.env
+            echo "PGPORT=${{ secrets.PG_PORT }}" >> server/.env
+            
+            # Настройки для корневого .env (если нужно)
+            echo "SSL_CERTS_PATH=/etc/letsencrypt" > .env
+            echo "DOMAIN=thunder-store.ru" >> .env
+            echo "NODE_ENV=production" >> .env
 
             echo "Updating Angular env.js"
             echo "window.env = { NG_APP_API_URL: '${{ secrets.NG_APP_API_URL }}', NG_APP_WS_URL: '${{ secrets.NG_APP_WS_URL }}' };" > client/dist/assets/env.js

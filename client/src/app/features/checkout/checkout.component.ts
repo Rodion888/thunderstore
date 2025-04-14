@@ -3,10 +3,10 @@ import { ChangeDetectionStrategy, Component, ElementRef, QueryList, ViewChild, V
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { CustomFieldComponent } from '../../shared/components/custom-field/custom-field.component';
-import { DeliveryOptions, ErrorMessages, PaymentOptions } from '../../core/constants/checkout.constants';
+import { ErrorMessages } from '../../core/constants/checkout.constants';
 import { SummaryComponent } from '../../shared/components/summary/summary.component';
-import { HttpClient } from '@angular/common/http';
-import { CartService } from '../../core/services/cart.service';
+import { OrderService } from '../../core/services/order.service';
+import { OrderResponse, DeliveryType, PaymentMethod } from '../../core/types/order.types';
 
 @Component({
   selector: 'app-checkout',
@@ -24,14 +24,18 @@ import { CartService } from '../../core/services/cart.service';
 })
 export class CheckoutComponent {
   private fb = inject(FormBuilder);
-  private http = inject(HttpClient);
-  private cartService = inject(CartService);
+  private orderService = inject(OrderService);
 
   @ViewChild('checkoutForm') checkoutFormRef!: ElementRef;
   @ViewChildren('section0, section1, section2') sections!: QueryList<ElementRef>;
 
   activeTab = 0;
   showErrors = false;
+
+  deliveryOptions = Object.entries(DeliveryType).map(([value, label]) => ({ label, value }));
+  paymentOptions = Object.entries(PaymentMethod)
+    .filter(([value]) => value !== 'ONLINE')
+    .map(([value, label]) => ({ label, value }));
 
   checkoutFormGroup: FormGroup = this.fb.group({
     deliveryType: ['', Validators.required],
@@ -41,11 +45,8 @@ export class CheckoutComponent {
     city: ['', Validators.required],
     address: ['', Validators.required],
     comment: [''],
-    paymentMethod: ['', Validators.required],
+    paymentMethod: ['', Validators.required]
   });
-
-  deliveryOptions = Object.entries(DeliveryOptions).map(([value, label]) => ({ label, value }));
-  paymentOptions = Object.entries(PaymentOptions).map(([value, label]) => ({ label, value }));
 
   getErrorMessage(field: string): string | null {
     if (!this.showErrors) return null;
@@ -77,18 +78,13 @@ export class CheckoutComponent {
     if (this.checkoutFormGroup.valid) {
       const orderData = this.checkoutFormGroup.value;
       
-      const cartItems = this.cartService.cartItems();
-      const totalAmount = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  
-      const paymentData = {
-        amount: totalAmount.toFixed(2),
-        description: orderData.fullName,
-      };
-    
-      this.http.post<{ payment_url: string }>('/api/create-payment', paymentData).subscribe({
-        next: (response) => {
-          window.location.href = response.payment_url;
+      this.orderService.createOrder(orderData).subscribe({
+        next: (response: OrderResponse) => {
+          console.log('Order successfully created:', response);
         },
+        error: (error) => {
+          console.error('Error creating order:', error);
+        }
       });
     } else {
       this.scrollToFirstInvalidSection();

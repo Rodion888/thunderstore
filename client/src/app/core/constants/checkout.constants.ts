@@ -1,4 +1,4 @@
-import { DeliveryType, PaymentMethod } from "../types/checkout.types";
+import { DeliveryType, PaymentMethod } from "../types/order.types";
 
 export const DeliveryOptions = {
   [DeliveryType.PICKUP]: 'Самовывоз в Краснодаре',

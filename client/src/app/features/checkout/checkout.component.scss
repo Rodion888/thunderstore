@@ -2,20 +2,20 @@
 @use "../../../assets/styles/variables";
 
 .background-container {
-  height: 100vh;
+  height: 100%;
   background-color: variables.$color-background-dark;
   overflow: hidden;
+  position: relative;
 }
 
 .top-container {
+  position: absolute;
+  left: 1rem;
+  bottom: calc(56% + 10.6rem);
+  width: 88%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: fixed;
-  top: 10rem;
-  left: 1rem;
-  z-index: 100;
-  width: 90%;
 }
 
 .tabs-container {
@@ -43,11 +43,11 @@
 }
 
 .checkout-container {
-  position: fixed;
+  position: absolute;
   bottom: 6rem;
   left: 1rem;
-  width: 86vw;
-  height: 54.8vh;
+  width: 88%;
+  height: 56%;
   padding: 2rem;
   overflow-y: auto;
   overflow-x: hidden;
@@ -98,8 +98,8 @@
   position: fixed;
   bottom: 1rem;
   left: 1rem;
-  width: 86vw;
-  height: 0rem;
+  width: 88%;
+  height: 0%;
   display: flex;
   flex-direction: row-reverse;
   align-items: center;
@@ -114,7 +114,6 @@
 @media (max-width: 624px) {
   .checkout-container {
     padding: 0.6rem;
-    height: 59.8vh;
   }
 
   .footer {
@@ -128,6 +127,7 @@
   }
 
   .top-container {
+    bottom: calc(52% + 10.5rem);
     flex-direction: column-reverse;
     gap: 0.4rem;
   }

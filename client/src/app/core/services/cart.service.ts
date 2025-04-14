@@ -1,19 +1,15 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { CartItem } from '../types/cart.types';
 import { Product } from '../types/product.types';
-import { HttpClient } from '@angular/common/http';
 import { WebSocketService } from './ws.service';
-import { ConfigService } from './config.service';
+import { CartApi } from '../api/cart.api';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
-  private http = inject(HttpClient);
+  private cartApi = inject(CartApi);
   private wsService = inject(WebSocketService);
-  private config = inject(ConfigService);
-
-  private apiUrl = `${this.config.apiUrl}/cart`;
 
   cartItems = signal<CartItem[]>([]);
 
@@ -29,40 +25,37 @@ export class CartService {
   }
 
   addToCart(product: Product, size: string) {
-    return this.http.post(`${this.apiUrl}/add`, {
-      productId: product.id,
-      size,
-      quantity: 1,
-    }, { withCredentials: true }).subscribe({
+    return this.cartApi.addToCart(product.id, size).subscribe({
       error: error => console.error(error),
     });
   }
 
   removeFromCart(item: CartItem) {
-    return this.http.post(`${this.apiUrl}/remove`, {
-      productId: item.id,
-      size: item.size,
-      quantity: 1,
-    }, { withCredentials: true }).subscribe({
+    return this.cartApi.removeFromCart(item.id, item.size).subscribe({
       error: error => console.error(error),
     });
   }
 
   clearCart() {
-    return this.http.post(`${this.apiUrl}/clear`, {}, { withCredentials: true })
-      .subscribe({
-        error: error => console.error(error),
-      });
+    return this.cartApi.clearCart().subscribe({
+      error: error => console.error(error),
+    });
   }
 
   loadCart() {
-    return this.http.get<CartItem[]>(`${this.apiUrl}`, { withCredentials: true })
-      .subscribe({
-        next: cart => {
-          this.cartItems.set(cart ?? []);
-        },
-        error: error => console.error(error),
-      });
+    return this.cartApi.getCart().subscribe({
+      next: cart => {
+        this.cartItems.set(cart ?? []);
+      },
+      error: error => console.error(error),
+    });
   }
 
+  getTotalItemsCount(): number {
+    return this.cartItems().reduce((total, item) => total + item.quantity, 0);
+  }
+
+  calculateTotal(): number {
+    return this.cartItems().reduce((total, item) => total + item.price * item.quantity, 0);
+  }
 }

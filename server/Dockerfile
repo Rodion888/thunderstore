@@ -2,9 +2,11 @@ FROM node:20
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm install --production
+RUN npm install
 
 COPY . .
+
+RUN npm run build
 
 ARG SERVER_URL
 ARG CORS_ORIGIN
@@ -13,4 +15,4 @@ ENV CORS_ORIGIN=$CORS_ORIGIN
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["node", "dist/server.js"]

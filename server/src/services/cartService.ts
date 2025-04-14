@@ -1,14 +1,16 @@
-import { loadProducts, updateProductsFile } from './productService.js';
+import productService from './productService.js';
+
 import { broadcastCartUpdate } from '../wsServer.js';
+import { carts } from '../storage/carts.js';
+import { Product } from '../types/index.js';
 
-import carts from '../storage/storages/cartsStorage.js';
-
-export async function addToCart(sessionId, productId, size, quantity) {
-  const products = await loadProducts();
+export async function addToCart(sessionId: string, productId: number, size: string, quantity: number): Promise<Product> {
+  const products = await productService.getProducts();
   const product = products.find(p => p.id === productId);
 
-  product.stock[size] -= quantity;
-  await updateProductsFile(products);
+  if (!product) {
+    throw new Error('Product not found');
+  }
 
   let userCart = carts.get(sessionId) || [];
 
@@ -27,18 +29,18 @@ export async function addToCart(sessionId, productId, size, quantity) {
   }
 
   carts.set(sessionId, userCart);
-
   broadcastCartUpdate(sessionId);
 
   return product;
 }
 
-export async function removeFromCart(sessionId, productId, size, quantity) {
-  const products = await loadProducts();
+export async function removeFromCart(sessionId: string, productId: number, size: string, quantity: number): Promise<Product> {
+  const products = await productService.getProducts();
   const product = products.find(p => p.id === productId);
 
-  product.stock[size] += quantity;
-  await updateProductsFile(products);
+  if (!product) {
+    throw new Error('Product not found');
+  }
 
   let userCart = carts.get(sessionId) || [];
 
@@ -46,7 +48,6 @@ export async function removeFromCart(sessionId, productId, size, quantity) {
 
   if (existingItemIndex !== -1) {
     const existingItem = userCart[existingItemIndex];
-
     if (existingItem.quantity > 1) {
       existingItem.quantity -= 1;
     } else {
@@ -55,26 +56,12 @@ export async function removeFromCart(sessionId, productId, size, quantity) {
   }
 
   carts.set(sessionId, userCart);
-
   broadcastCartUpdate(sessionId);
 
   return product;
 }
 
-export async function clearCart(sessionId) {
-  const userCart = carts.get(sessionId) || [];
-  const products = await loadProducts();
-
-  userCart.forEach(item => {
-    const product = products.find(p => p.id === item.id);
-    if (product && product.stock[item.size] !== undefined) {
-      product.stock[item.size] += item.quantity;
-    }
-  });
-
-  await updateProductsFile(products);
-
+export async function clearCart(sessionId: string): Promise<void> {
   carts.set(sessionId, []);
-
   broadcastCartUpdate(sessionId);
-}
+} 

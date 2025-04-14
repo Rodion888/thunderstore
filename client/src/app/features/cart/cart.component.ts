@@ -31,7 +31,7 @@ export class CartComponent {
   }
 
   goToCheckout() {
-    this.router.navigate(['/checkout']);
+    this.cartService.cartItems().length && this.router.navigate(['/checkout']);
   }
 
   removeFromCart(item: CartItem) {

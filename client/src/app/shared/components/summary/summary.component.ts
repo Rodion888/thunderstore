@@ -12,13 +12,9 @@ import { CommonModule } from '@angular/common';
 export class SummaryComponent {
   private cartService = inject(CartService);
 
-  cartItemsCount = computed(() =>
-    this.cartService.cartItems().reduce((total, item) => total + item.quantity, 0)
-  );
+  cartItemsCount = computed(() => this.cartService.getTotalItemsCount());
 
-  cartTotalPrice = computed(() =>
-    this.cartService.cartItems().reduce((total, item) => total + item.quantity * item.price, 0)
-  );
+  cartTotalPrice = computed(() => this.cartService.calculateTotal());
 
   getItemText(count: number): string {
     if (count % 10 === 1 && count % 100 !== 11) return 'товар';

@@ -2,10 +2,12 @@
   "name": "server",
   "version": "1.0.0",
   "type": "module",
-  "main": "server.js",
+  "main": "dist/server.js",
   "scripts": {
-    "dev": "NODE_ENV=development node server.js",
-    "start": "NODE_ENV=production node server.js"
+    "dev": "NODE_ENV=development NODE_PATH=./src tsx src/server.ts",
+    "start": "NODE_ENV=production node dist/server.js",
+    "build": "tsc",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
@@ -17,6 +19,15 @@
     "fastify": "^5.2.1",
     "fastify-cors": "^6.0.3",
     "fastify-formbody": "^5.2.0",
+    "pg": "^8.14.1",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/pg": "^8.10.9",
+    "@types/ws": "^8.5.10",
+    "ts-node": "^10.9.1",
+    "tsx": "^4.14.0",
+    "typescript": "^5.3.2"
   }
 }

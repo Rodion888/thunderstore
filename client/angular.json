@@ -27,6 +27,7 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/assets",
+              "src/assets/static",
               "src/assets/env.js"
             ],
             "styles": [
