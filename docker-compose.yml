@@ -13,6 +13,8 @@ services:
       - ./server/.env.production
     volumes:
       - ${SSL_CERTS_PATH:-/dev/null}:/etc/letsencrypt
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - app-network
 
