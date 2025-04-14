@@ -1,50 +1,58 @@
-- name: Connect to server and deploy
-  uses: appleboy/ssh-action@master
-  with:
-    host: ${{ secrets.SSH_HOST }}
-    username: ${{ secrets.SSH_USER }}
-    key: ${{ secrets.SSH_KEY }}
-    script: |
-      cd /var/www/thunder-store
+name: Deploy Thunder Store
 
-      echo "Updating repository"
-      git pull origin main
+on:
+  push:
+    branches:
+      - main
 
-      echo "Configuring PostgreSQL for remote connections"
-      # Найти актуальный путь к файлу конфигурации
-      PG_CONF=$(find /etc/postgresql -name postgresql.conf | head -n 1)
-      PG_HBA=$(find /etc/postgresql -name pg_hba.conf | head -n 1)
-      
-      # Настроить PostgreSQL для приема внешних подключений
-      sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" $PG_CONF
-      echo "host    all             all             172.0.0.0/8            md5" >> $PG_HBA
-      
-      # Перезапустить PostgreSQL
-      systemctl restart postgresql
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      echo "Creating .env file for server"
-      # Сервер и CORS
-      echo "SERVER_URL=${{ secrets.SERVER_URL }}" > server/.env
-      echo "CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}" >> server/.env
-      
-      # PostgreSQL
-      echo "PGUSER=${{ secrets.PG_USER }}" >> server/.env
-      echo "PGHOST=host.docker.internal" >> server/.env
-      echo "PGDATABASE=${{ secrets.PG_DATABASE }}" >> server/.env
-      echo "PGPASSWORD=${{ secrets.PG_PASSWORD }}" >> server/.env
-      echo "PGPORT=${{ secrets.PG_PORT }}" >> server/.env
-      
-      # Настройки для корневого .env
-      echo "SSL_CERTS_PATH=/etc/letsencrypt" > .env
-      echo "DOMAIN=thunder-store.ru" >> .env
-      echo "NODE_ENV=production" >> .env
+      - name: Connect to server and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /var/www/thunder-store
 
-      echo "Updating Angular env.js"
-      echo "window.env = { NG_APP_API_URL: '${{ secrets.NG_APP_API_URL }}', NG_APP_WS_URL: '${{ secrets.NG_APP_WS_URL }}' };" > client/dist/assets/env.js
+            echo "Updating repository"
+            git pull origin main
 
-      echo "Rebuilding and restarting containers"
-      docker-compose down
-      docker-compose build --no-cache
-      docker-compose up -d
+            echo "Configuring PostgreSQL for remote connections"
+            PG_CONF=$(find /etc/postgresql -name postgresql.conf | head -n 1)
+            PG_HBA=$(find /etc/postgresql -name pg_hba.conf | head -n 1)
+            
+            sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" $PG_CONF
+            echo "host    all             all             172.0.0.0/8            md5" >> $PG_HBA
+            
+            systemctl restart postgresql
 
-      echo "Deployment completed successfully!"
+            echo "Creating .env file for server"
+            echo "SERVER_URL=${{ secrets.SERVER_URL }}" > server/.env
+            echo "CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}" >> server/.env
+            
+            echo "PGUSER=${{ secrets.PG_USER }}" >> server/.env
+            echo "PGHOST=host.docker.internal" >> server/.env
+            echo "PGDATABASE=${{ secrets.PG_DATABASE }}" >> server/.env
+            echo "PGPASSWORD=${{ secrets.PG_PASSWORD }}" >> server/.env
+            echo "PGPORT=${{ secrets.PG_PORT }}" >> server/.env
+            
+            echo "SSL_CERTS_PATH=/etc/letsencrypt" > .env
+            echo "DOMAIN=thunder-store.ru" >> .env
+            echo "NODE_ENV=production" >> .env
+
+            echo "Updating Angular env.js"
+            echo "window.env = { NG_APP_API_URL: '${{ secrets.NG_APP_API_URL }}', NG_APP_WS_URL: '${{ secrets.NG_APP_WS_URL }}' };" > client/dist/assets/env.js
+
+            echo "Rebuilding and restarting containers"
+            docker-compose down
+            docker-compose build --no-cache
+            docker-compose up -d
+
+            echo "Deployment completed successfully!"
