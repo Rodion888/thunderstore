@@ -9,7 +9,7 @@ import { ConfigService } from '../services/config.service';
 export class CartApi {
   private http = inject(HttpClient);
   private config = inject(ConfigService);
-  private apiUrl = `${this.config.apiUrl}/api/cart`;
+  private apiUrl = `${this.config.apiUrl}/cart`;
 
   getCart() {
     return this.http.get<CartItem[]>(this.apiUrl, { withCredentials: true });

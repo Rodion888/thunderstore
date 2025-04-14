@@ -9,7 +9,7 @@ import { ConfigService } from '../services/config.service';
 export class ProductApi {
   private http = inject(HttpClient);
   private config = inject(ConfigService);
-  private apiUrl = `${this.config.apiUrl}/api/products`;
+  private apiUrl = `${this.config.apiUrl}/products`;
 
   getTotal() {
     return this.http.get<{ total: number, products: Product[] }>(this.apiUrl);

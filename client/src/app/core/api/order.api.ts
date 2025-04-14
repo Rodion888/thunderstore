@@ -9,7 +9,7 @@ import { OrderPayload, OrderResponse } from '../types/order.types';
 export class OrderApi {
   private http = inject(HttpClient);
   private config = inject(ConfigService);
-  private apiUrl = `${this.config.apiUrl}/api/orders`;
+  private apiUrl = `${this.config.apiUrl}/orders`;
 
   createOrder(orderPayload: OrderPayload) {
     return this.http.post<OrderResponse>(this.apiUrl, orderPayload, { withCredentials: true });
