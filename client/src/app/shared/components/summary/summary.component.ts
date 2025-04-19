@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { CartService } from '../../../core/services/cart.service';
 import { CommonModule } from '@angular/common';
+import { CurrencyConverterPipe } from '../../pipes/currency-converter.pipe';
 
 @Component({
   selector: 'app-summary',
   templateUrl: './summary.component.html',
   styleUrls: ['./summary.component.scss'],
-  imports: [CommonModule],
+  imports: [CommonModule, CurrencyConverterPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SummaryComponent {

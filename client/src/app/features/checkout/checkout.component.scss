@@ -12,7 +12,7 @@
   position: absolute;
   left: 1rem;
   bottom: calc(56% + 10.6rem);
-  width: 88%;
+  width: 92%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -130,6 +130,12 @@
     bottom: calc(52% + 10.5rem);
     flex-direction: column-reverse;
     gap: 0.4rem;
+  }
+
+  app-summary {
+    display: flex;
+    width: 98%;
+    flex-direction: row-reverse;
   }
 }
 

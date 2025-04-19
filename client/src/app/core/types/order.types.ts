@@ -7,8 +7,8 @@ export enum DeliveryType {
 }
 
 export enum PaymentMethod {
-  ONLINE = 'Онлайн',
-  CRYPTO = 'Криптовалюта',
+  ONLINE = 'online',
+  CRYPTO = 'crypto',
 }
 
 export interface OrderData {

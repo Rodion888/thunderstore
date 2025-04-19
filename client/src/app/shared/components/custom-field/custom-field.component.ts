@@ -20,6 +20,7 @@ export class CustomFieldComponent implements ControlValueAccessor {
   @Input() placeholder: string = '';
   @Input() label: string = '';
   @Input() errorMessage: string | null = null;
+  @Input() type: string = 'text';
 
   value: string = '';
 
@@ -40,11 +41,59 @@ export class CustomFieldComponent implements ControlValueAccessor {
 
   handleInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.value = input.value;
+    let inputValue = input.value;
+    
+    if (this.label.includes('Телефон')) {
+      inputValue = this.formatPhoneNumber(inputValue);
+      input.value = inputValue;
+    }
+    
+    this.value = inputValue;
     this.onChange(this.value);
   }
 
   handleBlur(): void {
+    if (this.label.includes('Телефон') && this.value && !this.value.startsWith('+7')) {
+      const formattedNumber = this.formatPhoneNumber(this.value);
+      this.value = formattedNumber;
+      this.onChange(this.value);
+    }
+    
     this.onTouchedCallback();
+  }
+
+  private formatPhoneNumber(value: string): string {
+    const digits = value.replace(/\D/g, '');
+    
+    if (!digits.length) {
+      return '';
+    }
+    
+    let phoneDigits;
+    if (digits.startsWith('7') || digits.startsWith('8')) {
+      phoneDigits = digits.substring(1);
+    } else {
+      phoneDigits = digits;
+    }
+    
+    let result = '+7';
+    
+    if (phoneDigits.length > 0) {
+      result += ' ' + phoneDigits.substring(0, Math.min(3, phoneDigits.length));
+    }
+    
+    if (phoneDigits.length > 3) {
+      result += ' ' + phoneDigits.substring(3, Math.min(6, phoneDigits.length));
+    }
+    
+    if (phoneDigits.length > 6) {
+      result += ' ' + phoneDigits.substring(6, Math.min(8, phoneDigits.length));
+    }
+    
+    if (phoneDigits.length > 8) {
+      result += ' ' + phoneDigits.substring(8, Math.min(10, phoneDigits.length));
+    }
+    
+    return result;
   }
 }

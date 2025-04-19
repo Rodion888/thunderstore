@@ -7,12 +7,13 @@ import { ButtonComponent } from '../../shared/components/button/button.component
 import { BackgroundVideoComponent } from '../../shared/components/background-video/background-video.component';
 import { BackgroundService } from '../../core/services/background.service';
 import { SummaryComponent } from '../../shared/components/summary/summary.component';
+import { CurrencyConverterPipe } from '../../shared/pipes/currency-converter.pipe';
 
 @Component({
   selector: 'app-cart',
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.scss'],
-  imports: [CommonModule, ButtonComponent, BackgroundVideoComponent, SummaryComponent],
+  imports: [CommonModule, ButtonComponent, BackgroundVideoComponent, SummaryComponent, CurrencyConverterPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CartComponent {

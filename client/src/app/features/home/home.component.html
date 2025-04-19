@@ -7,3 +7,24 @@
     </ng-container>
   </div>
 </div>
+
+<div class="footer text-default">
+  <div class="footer-links">
+    <span>CONTACT US</span>
+    <span>TERMS</span>
+    <span>PRIVACY</span>
+    <span>COOKIE POLICY</span>
+  </div>
+  <div class="currency-language-selectors">
+    <app-custom-select
+      [options]="currencyOptions" 
+      [(ngModel)]="selectedCurrency"
+      (ngModelChange)="onCurrencyChange($event)">
+    </app-custom-select>
+    <app-custom-select
+      [options]="languageOptions" 
+      [(ngModel)]="selectedLanguage"
+      (ngModelChange)="onLanguageChange($event)">
+    </app-custom-select>
+  </div>
+</div>

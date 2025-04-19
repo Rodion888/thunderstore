@@ -36,12 +36,14 @@
           <app-custom-field
             formControlName="phone"
             label="Телефон"
+            type="tel"
             placeholder="Введите ваш номер телефона"
             [errorMessage]="getErrorMessage('phone')">
           </app-custom-field>
           <app-custom-field
             formControlName="email"
             label="Email"
+            type="email"
             placeholder="Введите вашу электронную почту"
             [errorMessage]="getErrorMessage('email')">
           </app-custom-field>

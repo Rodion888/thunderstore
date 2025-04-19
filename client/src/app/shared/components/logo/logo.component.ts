@@ -1,6 +1,7 @@
-import { Component, AfterViewInit, ElementRef, ViewChild, HostListener, ChangeDetectionStrategy } from '@angular/core';
+import { Component, AfterViewInit, ElementRef, ViewChild, HostListener, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import { Router } from '@angular/router';
 
 import * as THREE from 'three';
 
@@ -10,7 +11,7 @@ import * as THREE from 'three';
   styleUrls: ['./logo.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LogoComponent implements AfterViewInit {
+export class LogoComponent implements AfterViewInit, OnDestroy {
   @ViewChild('logoCanvas') private readonly canvasRef!: ElementRef<HTMLCanvasElement>;
   
   // Three.js objects
@@ -20,14 +21,23 @@ export class LogoComponent implements AfterViewInit {
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
   private lights: THREE.Light[] = [];
+  private raycaster = new THREE.Raycaster();
+  private mouse = new THREE.Vector2();
+  
+  // Animation
+  private animationId: number | null = null;
   
   // Rotation control
   private isDragging = false;
   private previousMousePosition = { x: 0, y: 0 };
+  private dragStartTime = 0;
+  private mouseMoved = false;
 
   // Constants
-  private readonly ROTATION_SPEED = 0.01;
+  private readonly ROTATION_SPEED = 0.02;
   private readonly CAMERA_POSITION_Z = 8;
+  private readonly CLICK_THRESHOLD = 200; // ms
+  private readonly MOVE_THRESHOLD = 5; // pixels
   
   // light configuration with subtle gradient highlights
   private readonly LIGHT_CONFIG = {
@@ -40,10 +50,27 @@ export class LogoComponent implements AfterViewInit {
     directional: { color: 0xffffff, intensity: 1.5, position: [0, 0, 5] as [number, number, number] }
   };
 
+  constructor(private router: Router) {}
+
   ngAfterViewInit(): void {
     this.initScene();
     this.initLights();
     this.loadText();
+  }
+  
+  ngOnDestroy(): void {
+    if (this.animationId !== null) {
+      cancelAnimationFrame(this.animationId);
+    }
+    
+    if (this.renderer) {
+      this.renderer.dispose();
+    }
+    
+    if (this.mesh) {
+      this.mesh.geometry.dispose();
+      (this.mesh.material as THREE.Material).dispose();
+    }
   }
 
   private initScene(): void {
@@ -62,7 +89,7 @@ export class LogoComponent implements AfterViewInit {
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setClearColor(0x000000, 0);
-
+    
     this.group = new THREE.Group();
     this.scene.add(this.group);
   }
@@ -103,7 +130,7 @@ export class LogoComponent implements AfterViewInit {
   private loadText(): void {
     const loader = new FontLoader();
     loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
-      const geometry = new TextGeometry('Thunder', {
+      const geometry = new TextGeometry('thunder', {
         font,
         size: 1.2,
         depth: 0.5,
@@ -148,11 +175,11 @@ export class LogoComponent implements AfterViewInit {
 
   private startAnimation(): void {
     const animate = () => {
-      requestAnimationFrame(animate);
+      this.animationId = requestAnimationFrame(animate);
       
       const time = Date.now() * 0.001;
       
-      // Enhanced animation with subtle intensity changes
+      // Light animation
       for (let i = 1; i < 4; i++) {
         const light = this.lights[i] as THREE.SpotLight;
         const baseIntensity = i < 3 ? 8 : 6;
@@ -168,9 +195,36 @@ export class LogoComponent implements AfterViewInit {
     animate();
   }
 
+  private checkTextIntersection(event: MouseEvent | Touch): boolean {
+    if (!this.mesh || !this.group) return false;
+    
+    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    
+    this.mouse.set(x, y);
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    
+    const intersects = this.raycaster.intersectObject(this.mesh, true);
+    
+    return intersects.length > 0;
+  }
+
+  @HostListener('click', ['$event'])
+  onClick(event: MouseEvent): void {
+    const clickDuration = Date.now() - this.dragStartTime;
+    if (!this.mouseMoved && clickDuration < this.CLICK_THRESHOLD) {
+      if (this.checkTextIntersection(event)) {
+        this.router.navigate(['/']);
+      }
+    }
+  }
+
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent): void {
     this.isDragging = true;
+    this.dragStartTime = Date.now();
+    this.mouseMoved = false;
     this.previousMousePosition = {
       x: event.clientX,
       y: event.clientY
@@ -191,6 +245,10 @@ export class LogoComponent implements AfterViewInit {
       y: event.clientY - this.previousMousePosition.y
     };
 
+    if (Math.abs(deltaMove.x) > this.MOVE_THRESHOLD || Math.abs(deltaMove.y) > this.MOVE_THRESHOLD) {
+      this.mouseMoved = true;
+    }
+
     this.group.rotation.x += deltaMove.y * this.ROTATION_SPEED;
     this.group.rotation.y += deltaMove.x * this.ROTATION_SPEED;
 
@@ -198,5 +256,61 @@ export class LogoComponent implements AfterViewInit {
       x: event.clientX,
       y: event.clientY
     };
+  }
+  
+  @HostListener('touchstart', ['$event'])
+  onTouchStart(event: TouchEvent): void {
+    if (event.touches.length !== 1) return;
+    
+    event.preventDefault();
+    const touch = event.touches[0];
+    
+    this.isDragging = true;
+    this.dragStartTime = Date.now();
+    this.mouseMoved = false;
+    this.previousMousePosition = {
+      x: touch.clientX,
+      y: touch.clientY
+    };
+  }
+  
+  @HostListener('touchmove', ['$event'])
+  onTouchMove(event: TouchEvent): void {
+    if (!this.isDragging || !this.group || event.touches.length !== 1) return;
+    
+    event.preventDefault();
+    const touch = event.touches[0];
+    
+    const deltaMove = {
+      x: touch.clientX - this.previousMousePosition.x,
+      y: touch.clientY - this.previousMousePosition.y
+    };
+    
+    if (Math.abs(deltaMove.x) > this.MOVE_THRESHOLD || Math.abs(deltaMove.y) > this.MOVE_THRESHOLD) {
+      this.mouseMoved = true;
+    }
+    
+    this.group.rotation.x += deltaMove.y * this.ROTATION_SPEED;
+    this.group.rotation.y += deltaMove.x * this.ROTATION_SPEED;
+    
+    this.previousMousePosition = {
+      x: touch.clientX,
+      y: touch.clientY
+    };
+  }
+  
+  @HostListener('touchend', ['$event'])
+  onTouchEnd(event: TouchEvent): void {
+    if (!this.isDragging) return;
+    
+    event.preventDefault();
+    this.isDragging = false;
+    
+    const touchDuration = Date.now() - this.dragStartTime;
+    if (!this.mouseMoved && touchDuration < this.CLICK_THRESHOLD && event.changedTouches.length > 0) {
+      if (this.checkTextIntersection(event.changedTouches[0])) {
+        this.router.navigate(['/']);
+      }
+    }
   }
 }

@@ -11,7 +11,7 @@
       <div class="cart-details">
         <span class="item-name text-bold text-default">{{ item.name }} <span class="text-price">({{ item.size }})</span></span>
         <span class="item-quantity text-default">Количество: <span class="quantity-value text-accent">{{ item.quantity }}</span></span>
-        <span class="item-price text-default">Цена: <span class="item-size text-price">{{ item.price }}</span></span>
+        <span class="item-price text-default">Цена: <span class="item-size text-price">{{ item.price | currencyConverter }}</span></span>
       </div>
       <app-button type="cross" (buttonClick)="removeFromCart(item)"></app-button>
     </div>

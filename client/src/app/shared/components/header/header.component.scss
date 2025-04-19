@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   width: 100%;
-  padding: 2rem;
+  height: 6rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -13,9 +13,11 @@
 
 .logo-container {
   cursor: pointer;
-  height: 50px;
-  position: relative;
-  top: -46px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 2rem;
+  margin-left: 1.8rem;
 }
 
 .cart-items {
@@ -24,7 +26,7 @@
 }
 
 .cart-button-block {
-  margin-right: 4rem;
+  margin-right: 2rem;
 }
 
 .cart-button {

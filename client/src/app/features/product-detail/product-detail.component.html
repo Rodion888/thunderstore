@@ -22,7 +22,7 @@
       <span>Рост модели: 185, на модели размер L</span>
     </div>
 
-    <span class="subtitle">Цена: <span class="color-secondary text-bold text-md">{{ product.price }}</span></span>
+    <span class="subtitle">Цена: <span class="color-secondary text-bold text-md">{{ product.price | currencyConverter }}</span></span>
 
     <div class="actions">
       <app-custom-select

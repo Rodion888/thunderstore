@@ -2,6 +2,7 @@
   <label *ngIf="label" class="input-label">{{ label }}</label>
   <input
     class="input"
+    [type]="type"
     [placeholder]="placeholder"
     [value]="value"
     (input)="handleInput($event)"
