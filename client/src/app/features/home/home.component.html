@@ -17,13 +17,17 @@
   </div>
   <div class="currency-language-selectors">
     <app-custom-select
-      [options]="currencyOptions" 
+      class="l-c-select"
+      [options]="currencyOptions"
       [(ngModel)]="selectedCurrency"
+      [placeholder]="'Выберете валюту'"
       (ngModelChange)="onCurrencyChange($event)">
     </app-custom-select>
     <app-custom-select
+      class="l-c-select"
       [options]="languageOptions" 
       [(ngModel)]="selectedLanguage"
+      [placeholder]="'Выберете язык'"
       (ngModelChange)="onLanguageChange($event)">
     </app-custom-select>
   </div>

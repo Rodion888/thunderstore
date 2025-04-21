@@ -1,6 +1,6 @@
 .background-video {
   position: fixed;
-  top: -76px;
+  top: -9.4%;
   left: 0px;
   width: 120vw;
   height: 110vh;
@@ -11,12 +11,10 @@
   overflow: hidden;
   z-index: 1;
   pointer-events: none;
+  opacity: 0;
 }
 
-body.video-loaded {
-  background-color: transparent !important;
-}
-
-.video-loaded .background-video {
-  opacity: 1 !important;
+.background-video.visible {
+  opacity: 0.888;
+  transition: opacity 2s ease-in-out;
 }

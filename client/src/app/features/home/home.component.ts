@@ -1,17 +1,17 @@
-import { Component, inject, HostListener, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
-import { RouterModule } from '@angular/router';
-import { Product } from '../../core/types/product.types';
-import { FormsModule } from '@angular/forms';
 import { CardComponent } from '../../shared/components/card/card.component';
-import { BackgroundService } from '../../core/services/background.service';
+import { CurrencyService } from '../../core/services/currency.service';
+import { Currency } from '../../core/services/currency.service';
 import { BackgroundVideoComponent } from '../../shared/components/background-video/background-video.component';
-import { CustomSelectComponent, SelectOption } from '../../shared/components/custom-select/custom-select.component';
-import { CurrencyService, Currency } from '../../core/services/currency.service';
-
-export type Language = 'RU' | 'EN';
+import { BackgroundService } from '../../core/services/background.service';
+import { FormsModule } from '@angular/forms';
+import { SelectOption, CustomSelectComponent } from '../../shared/components/custom-select/custom-select.component';
+import { TranslationService, Language } from '../../core/services/translation.service';
+import { Product } from '../../core/types/product.types';
 
 @Component({
   selector: 'app-home',
@@ -25,6 +25,7 @@ export class HomeComponent {
   private cartService = inject(CartService);
   private backgroundService = inject(BackgroundService);
   private currencyService = inject(CurrencyService);
+  private translationService = inject(TranslationService);
   private cdr = inject(ChangeDetectorRef);
 
   loading = this.productService.loading;
@@ -50,6 +51,11 @@ export class HomeComponent {
       this.selectedCurrency = currency;
       this.cdr.markForCheck();
     });
+    
+    this.translationService.getCurrentLang().subscribe(lang => {
+      this.selectedLanguage = lang;
+      this.cdr.markForCheck();
+    });
   }
 
   onCurrencyChange(currency: string): void {
@@ -58,10 +64,8 @@ export class HomeComponent {
     this.cdr.markForCheck();
   }
   
-  onLanguageChange(language: string): void {
-    this.selectedLanguage = language as Language;
-    
-    this.cdr.markForCheck();
+  onLanguageChange(language: Language): void {
+    this.translationService.setLanguage(language);
   }
 
   onScroll(event: Event): void {

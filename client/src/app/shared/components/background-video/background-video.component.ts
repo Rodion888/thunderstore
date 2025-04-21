@@ -1,4 +1,4 @@
-import { Component, ElementRef, Renderer2, AfterViewInit, ViewChild, OnInit, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ElementRef, Renderer2, ViewChild, OnInit, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { BackgroundService } from '../../../core/services/background.service';
 import { CommonModule } from '@angular/common';
 
@@ -9,30 +9,33 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class BackgroundVideoComponent implements OnInit, AfterViewInit {
+export class BackgroundVideoComponent implements OnInit {
   private renderer = inject(Renderer2);
   private backgroundService = inject(BackgroundService);
   private cd = inject(ChangeDetectorRef);
 
-  @ViewChild('videoElement', { static: true }) videoElement!: ElementRef<HTMLVideoElement>;
+  @ViewChild('videoElement', { static: false }) videoElement?: ElementRef<HTMLVideoElement>;
 
   videoSrc: string | null = null;
+  isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) && !/chrome|crios/i.test(navigator.userAgent);
 
   ngOnInit(): void {
+    if (this.isSafari) {
+      return;
+    }
+
     this.backgroundService.getVideo().subscribe((src) => {
       if (src) {
         this.videoSrc = src;
         this.cd.detectChanges();
+        
+        setTimeout(() => {
+          if (this.videoElement) {
+            this.renderer.addClass(this.videoElement.nativeElement, 'visible');
+            this.renderer.addClass(document.body, 'video-loaded');
+          }
+        });
       }
     });
-  }
-
-  ngAfterViewInit(): void {
-    if (this.videoElement) {
-      this.renderer.listen(this.videoElement.nativeElement, 'loadeddata', () => {
-        this.renderer.setStyle(this.videoElement.nativeElement, 'opacity', '1');
-        this.renderer.setStyle(this.videoElement.nativeElement, 'transition', 'opacity 0.5s ease-in-out');
-      });
-    }
   }
 }

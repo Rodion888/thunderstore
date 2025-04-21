@@ -10,6 +10,7 @@ import { OrderResponse } from '../../core/types/order.types';
 import { PaymentService } from '../../core/services/payment.service';
 import { PaymentMethod } from '../../core/types/order.types';
 import { Subject } from 'rxjs';
+import { ScrollService } from '../../core/services/scroll.service';
 
 @Component({
   selector: 'app-checkout',
@@ -30,6 +31,7 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
   private orderService = inject(OrderService);
   private paymentService = inject(PaymentService);
   private cdr = inject(ChangeDetectorRef);
+  private scrollService = inject(ScrollService);
 
   @ViewChild('checkoutForm') checkoutFormRef!: ElementRef;
   @ViewChildren('section0, section1, section2') sections!: QueryList<ElementRef>;
@@ -37,16 +39,8 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
   activeTab = 0;
   showErrors = false;
   
-  private isScrollingProgrammatically = false;
-  private lastScrollTop = 0;
-  private scrollingDirection: 'up' | 'down' = 'down';
   private destroy$ = new Subject<void>();
 
-  private readonly SCROLL_THRESHOLD = 50;
-  private readonly VISIBLE_THRESHOLD = 20;
-  private readonly MIDDLE_SECTION_THRESHOLD = 10;
-  private readonly SCROLL_ANIMATION_DURATION = 500;
-  
   deliveryOptions = Object.entries(DeliveryOptions).map(([key, value]) => ({ value: key, label: value }));
   paymentOptions = Object.entries(PaymentOptions).map(([key, value]) => ({ value: key, label: value }));
 
@@ -74,68 +68,14 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
     if (!this.checkoutFormRef || !this.sections) return;
     
     const container = this.checkoutFormRef.nativeElement;
-    this.lastScrollTop = container.scrollTop;
-    
-    container.addEventListener('scroll', () => {
-      if (this.isScrollingProgrammatically) return;
-      
-      const st = container.scrollTop;
-      this.scrollingDirection = st > this.lastScrollTop ? 'down' : 'up';
-      this.lastScrollTop = st;
-      
-      this.updateActiveTabBasedOnScroll(container);
-    });
-    
-    setTimeout(() => this.updateActiveTabBasedOnScroll(container), 100);
-  }
-  
-  private updateActiveTabBasedOnScroll(container: HTMLElement): void {
-    const scrollTop = container.scrollTop;
-    const containerHeight = container.clientHeight;
-    
-    if (scrollTop < this.SCROLL_THRESHOLD) {
-      return this.updateActiveTab(0);
-    }
-    
-    if (this.scrollingDirection === 'down' && scrollTop + containerHeight >= container.scrollHeight - this.SCROLL_THRESHOLD) {
-      return this.updateActiveTab(2);
-    }
-    
-    const visibleSections = this.getVisibleSections(container);
-    
-    if (this.scrollingDirection === 'up' && visibleSections.some(s => s.index === 1 && s.visiblePercent >= this.MIDDLE_SECTION_THRESHOLD)) {
-      return this.updateActiveTab(1);
-    }
-    
-    if (visibleSections.length > 0) {
-      const mostVisibleSection = visibleSections[0];
-      if (mostVisibleSection.visiblePercent >= this.VISIBLE_THRESHOLD) {
-        this.updateActiveTab(mostVisibleSection.index);
-      }
-    }
-  }
-
-  private getVisibleSections(container: HTMLElement): { index: number, visiblePercent: number }[] {
     const sectionsArray = this.sections.toArray();
-    const containerRect = container.getBoundingClientRect();
-    const result: { index: number, visiblePercent: number }[] = [];
     
-    sectionsArray.forEach((section, index) => {
-      const element = section.nativeElement;
-      const rect = element.getBoundingClientRect();
-      
-      const visibleTop = Math.max(rect.top, containerRect.top);
-      const visibleBottom = Math.min(rect.bottom, containerRect.bottom);
-      
-      if (visibleBottom > visibleTop) {
-        const visibleHeight = visibleBottom - visibleTop;
-        const percentVisible = (visibleHeight / rect.height) * 100;
-        
-        result.push({ index, visiblePercent: percentVisible });
-      }
-    });
-    
-    return result.sort((a, b) => b.visiblePercent - a.visiblePercent);
+    this.scrollService.setupScrollListener(
+      container,
+      sectionsArray,
+      (index: number) => this.updateActiveTab(index),
+      this.cdr
+    );
   }
   
   private updateActiveTab(index: number): void {
@@ -158,21 +98,11 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
   }
 
   scrollToSection(sectionIndex: number): void {
-    this.isScrollingProgrammatically = true;
-    this.updateActiveTab(sectionIndex);
-    
     const section = this.sections.toArray()[sectionIndex];
     
     if (section) {
-      section.nativeElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-        inline: 'nearest'
-      });
-      
-      setTimeout(() => {
-        this.isScrollingProgrammatically = false;
-      }, this.SCROLL_ANIMATION_DURATION);
+      this.updateActiveTab(sectionIndex);
+      this.scrollService.scrollToSection(section);
     }
   }
 
