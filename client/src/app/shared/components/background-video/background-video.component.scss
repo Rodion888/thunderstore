@@ -12,6 +12,18 @@
   z-index: 1;
   pointer-events: none;
   opacity: 0;
+  
+  /* Скрыть кнопку воспроизведения в Safari */
+  &::-webkit-media-controls {
+    display: none !important;
+  }
+  
+  &::-webkit-media-controls-start-playback-button {
+    display: none !important;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+  }
 }
 
 .background-video.visible {

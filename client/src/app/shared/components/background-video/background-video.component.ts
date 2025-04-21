@@ -17,13 +17,8 @@ export class BackgroundVideoComponent implements OnInit {
   @ViewChild('videoElement', { static: false }) videoElement?: ElementRef<HTMLVideoElement>;
 
   videoSrc: string | null = null;
-  isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) && !/chrome|crios/i.test(navigator.userAgent);
 
   ngOnInit(): void {
-    if (this.isSafari) {
-      return;
-    }
-
     this.backgroundService.getVideo().subscribe((src) => {
       if (src) {
         this.videoSrc = src;

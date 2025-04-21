@@ -10,24 +10,23 @@
 
 <div class="footer text-default">
   <div class="footer-links">
-    <span>CONTACT US</span>
-    <span>TERMS</span>
-    <span>PRIVACY</span>
-    <span>COOKIE POLICY</span>
+    <span [routerLink]="['/info/contact-us']">{{ 'contact-us' | translate }}</span>
+    <span [routerLink]="['/info/terms']">{{ 'terms' | translate }}</span>
+    <span [routerLink]="['/info/privacy']">{{ 'privacy' | translate }}</span>
   </div>
   <div class="currency-language-selectors">
     <app-custom-select
       class="l-c-select"
       [options]="currencyOptions"
-      [(ngModel)]="selectedCurrency"
-      [placeholder]="'Выберете валюту'"
+      [ngModel]="currencyService.currency()"
+      [placeholder]="'select-currency' | translate"
       (ngModelChange)="onCurrencyChange($event)">
     </app-custom-select>
     <app-custom-select
       class="l-c-select"
       [options]="languageOptions" 
-      [(ngModel)]="selectedLanguage"
-      [placeholder]="'Выберете язык'"
+      [ngModel]="translationService.currentLang()"
+      [placeholder]="'select-language' | translate"
       (ngModelChange)="onLanguageChange($event)">
     </app-custom-select>
   </div>

@@ -24,6 +24,10 @@ jobs:
             echo "Updating repository"
             git pull origin main
 
+            echo "Creating logs directory"
+            mkdir -p /var/www/thunder-store/logs
+            chmod 755 /var/www/thunder-store/logs
+
             echo "Configuring PostgreSQL for remote connections"
             PG_CONF=$(find /etc/postgresql -name postgresql.conf | head -n 1)
             PG_HBA=$(find /etc/postgresql -name pg_hba.conf | head -n 1)
@@ -42,6 +46,15 @@ jobs:
             echo "PGDATABASE=${{ secrets.PG_DATABASE }}" >> server/.env
             echo "PGPASSWORD=${{ secrets.PG_PASSWORD }}" >> server/.env
             echo "PGPORT=${{ secrets.PG_PORT }}" >> server/.env
+            
+            echo "CRYPTO_CLOUD_API_KEY=${{ secrets.CRYPTO_CLOUD_API_KEY }}" >> server/.env
+            echo "CRYPTO_CLOUD_SHOP_ID=${{ secrets.CRYPTO_CLOUD_SHOP_ID }}" >> server/.env
+            echo "APP_URL=${{ secrets.APP_URL }}" >> server/.env
+            
+            echo "LOG_LEVEL=info" >> server/.env
+            echo "TELEGRAM_ENABLED=true" >> server/.env
+            echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> server/.env
+            echo "TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}" >> server/.env
             
             echo "SSL_CERTS_PATH=/etc/letsencrypt" > .env
             echo "DOMAIN=thunder-store.ru" >> .env

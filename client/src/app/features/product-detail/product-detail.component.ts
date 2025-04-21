@@ -9,7 +9,8 @@ import { ButtonComponent } from '../../shared/components/button/button.component
 import { CustomSelectComponent, SelectOption } from '../../shared/components/custom-select/custom-select.component';
 import { BackgroundVideoComponent } from '../../shared/components/background-video/background-video.component';
 import { BackgroundService } from '../../core/services/background.service';
-import { CurrencyConverterPipe } from "../../shared/pipes/currency-converter.pipe";
+import { AppCurrencyPipe } from "../../shared/pipes/currency.pipe";
+import { TranslatePipe } from "../../shared/pipes/translate.pipe";
 
 @Component({
   selector: 'app-product-detail',
@@ -21,7 +22,8 @@ import { CurrencyConverterPipe } from "../../shared/pipes/currency-converter.pip
     ButtonComponent,
     CustomSelectComponent,
     BackgroundVideoComponent,
-    CurrencyConverterPipe
+    AppCurrencyPipe,
+    TranslatePipe
 ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -11,6 +11,8 @@ import { PaymentService } from '../../core/services/payment.service';
 import { PaymentMethod } from '../../core/types/order.types';
 import { Subject } from 'rxjs';
 import { ScrollService } from '../../core/services/scroll.service';
+import { TranslatePipe } from '../../shared/pipes/translate.pipe';
+import { TranslationService } from '../../core/services/translation.service';
 
 @Component({
   selector: 'app-checkout',
@@ -23,6 +25,7 @@ import { ScrollService } from '../../core/services/scroll.service';
     ButtonComponent,
     CustomFieldComponent,
     SummaryComponent,
+    TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -32,6 +35,7 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
   private paymentService = inject(PaymentService);
   private cdr = inject(ChangeDetectorRef);
   private scrollService = inject(ScrollService);
+  private translationService = inject(TranslationService);
 
   @ViewChild('checkoutForm') checkoutFormRef!: ElementRef;
   @ViewChildren('section0, section1, section2') sections!: QueryList<ElementRef>;
@@ -90,11 +94,11 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
     const control = this.checkoutFormGroup.get(field);
     if (!control || !control.invalid) return null;
 
-    if (control.errors?.['required']) return ErrorMessages.required;
-    if (control.errors?.['email']) return ErrorMessages.email;
-    if (control.errors?.['pattern']) return ErrorMessages.pattern;
+    if (control.errors?.['required']) return this.translationService.translate(ErrorMessages.required);
+    if (control.errors?.['email']) return this.translationService.translate(ErrorMessages.email);
+    if (control.errors?.['pattern']) return this.translationService.translate(ErrorMessages.pattern);
 
-    return ErrorMessages.invalid;
+    return this.translationService.translate(ErrorMessages.invalid);
   }
 
   scrollToSection(sectionIndex: number): void {

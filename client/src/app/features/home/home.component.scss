@@ -1,3 +1,5 @@
+@use '../../../assets/styles/variables';
+
 .page-content {
   top: 18.2%;
   left: 11%;
@@ -62,8 +64,8 @@
 .footer {
   position: fixed;
   bottom: 0.8rem;
-  left: 10%;
-  width: 72%;
+  width: 100%;
+  margin-left: 1.8rem;
   height: 3rem;
   display: flex;
   align-items: center;
@@ -72,12 +74,22 @@
 
 .footer-links {
   display: flex;
-  justify-content: space-around;
+  gap: 1rem;
   flex-basis: 78%;
+  
+  span {
+    cursor: pointer;
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: variables.$color-text-tertiary;
+    }
+  }
 }
 
 .currency-language-selectors {
   flex-basis: 20%;
+  margin-right: 4rem;
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -101,27 +113,21 @@
   }
 
   .page-content {
-    top: 18.5%;
+    top: 18.2%;
     border-radius: 8px;
   }
 
   .footer {
-    left: 8%;
-    width: 78%;
-    bottom: 1rem;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    width: 86%;
+    bottom: 1.2rem;
   }
 
   .footer-links {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 0.08rem;
-    text-align: center;
-    font-size: 0.740rem;
-    flex-basis: 50%;
-    margin-bottom: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 0.7rem;
+    gap: 0.1rem;
     
     span {
       display: flex;
@@ -131,7 +137,9 @@
   }
 
   .currency-language-selectors {
-    flex-basis: 44%;
+    margin-right: 0rem;
+    flex-basis: 54%;
+    display: flex;
     gap: 0.4rem;
   }
 }

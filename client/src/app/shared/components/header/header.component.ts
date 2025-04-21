@@ -4,13 +4,14 @@ import { Router } from '@angular/router';
 import { computed } from '@angular/core';
 import { CartService } from '../../../core/services/cart.service';
 import { LogoComponent } from '../logo/logo.component';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
   standalone: true,
-  imports: [CommonModule, LogoComponent],
+  imports: [CommonModule, LogoComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HeaderComponent {

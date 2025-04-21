@@ -1,11 +1,8 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { BehaviorSubject, catchError, of, tap } from 'rxjs';
+import { catchError, of, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
-export enum Currency {
-  RUB = 'RUB',
-  USD = 'USD'
-}
+export type Currency = 'RUB' | 'USD';
 
 interface StoredExchangeRate {
   rate: number;
@@ -19,26 +16,30 @@ export class CurrencyService {
   private http = inject(HttpClient);
   
   private fallbackExchangeRate = 90;
-  private exchangeRate = new BehaviorSubject<number>(this.fallbackExchangeRate);
-  private currentCurrency = new BehaviorSubject<Currency>(Currency.RUB);
-
-  public exchangeRate$ = this.exchangeRate.asObservable();
-  public currentCurrency$ = this.currentCurrency.asObservable();
-  public currency = signal<Currency>(Currency.RUB);
+  
+  public exchangeRate = signal<number>(this.fallbackExchangeRate);
+  public currency = signal<Currency>('RUB');
   
   private readonly STORAGE_KEY = 'exchange_rate_data';
+  private readonly CURRENCY_STORAGE_KEY = 'currency';
   private readonly RATE_EXPIRY_TIME = 86400000;
   private readonly API_URL = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json';
   
   constructor() {
+    this.initCurrency();
     this.initExchangeRate();
+  }
+
+  private initCurrency(): void {
+    const savedCurrency = localStorage.getItem(this.CURRENCY_STORAGE_KEY) as Currency;
+    this.currency.set(savedCurrency || 'RUB');
   }
 
   private initExchangeRate(): void {
     const storedData = this.getStoredExchangeRate();
     
     if (storedData && !this.isRateExpired(storedData.timestamp)) {
-      this.exchangeRate.next(storedData.rate);
+      this.exchangeRate.set(storedData.rate);
     } else {
       this.fetchExchangeRate();
     }
@@ -64,9 +65,9 @@ export class CurrencyService {
   fetchExchangeRate(): void {
     this.http.get<any>(this.API_URL).pipe(
       tap(response => {
-        if (response && response.usd && response.usd.rub) {
+        if (response?.usd?.rub) {
           const rate = response.usd.rub;
-          this.exchangeRate.next(rate);
+          this.exchangeRate.set(rate);
           this.storeExchangeRate(rate);
         }
       }),
@@ -75,16 +76,16 @@ export class CurrencyService {
   }
 
   setCurrency(currency: Currency): void {
-    this.currentCurrency.next(currency);
     this.currency.set(currency);
+    localStorage.setItem(this.CURRENCY_STORAGE_KEY, currency);
   }
 
   convertPrice(priceInRub: number, targetCurrency: Currency = this.currency()): number {
-    const currentRate = this.exchangeRate.value;
+    const currentRate = this.exchangeRate();
     
-    if (targetCurrency === Currency.RUB) {
+    if (targetCurrency === 'RUB') {
       return priceInRub;
-    } else if (targetCurrency === Currency.USD) {
+    } else if (targetCurrency === 'USD') {
       return Number((priceInRub / currentRate).toFixed(2));
     }
     return priceInRub;

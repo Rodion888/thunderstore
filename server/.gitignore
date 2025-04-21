@@ -1,2 +1,35 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Environment files
 .env
+.env.*
+
+# Build output
+dist/
+build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Coverage directory
+coverage/
+
+# Temporary files
+tmp/
+temp/
+
+# Config overrides
+config.override.js
+config.local.js
+
+# SSL Certificates
+*.pem
+*.key
+*.crt
+
+# Local database dumps
+*.dump
+*.backup

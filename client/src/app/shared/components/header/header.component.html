@@ -5,7 +5,7 @@
 
   <div class="cart-button-block">
     <a (click)="goTo('/cart')" class="cart-button text-default">
-      Корзина<div class="cart-items text-accent">{{ cartItemsCount() }}</div>
+      {{ 'cart' | translate }}<div class="cart-items text-accent">{{ cartItemsCount() }}</div>
     </a>
   </div>
 </div>

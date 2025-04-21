@@ -7,7 +7,7 @@ export const DeliveryOptions = {
 };
 
 export const PaymentOptions = {
-  [PaymentMethod.ONLINE]: 'Онлайн-оплата (VISA / MASTERCARD / МИР / СБП / T-PAY / SBERPAY)',
+  // [PaymentMethod.ONLINE]: 'Онлайн-оплата (VISA / MASTERCARD / МИР / СБП / T-PAY / SBERPAY)',
   [PaymentMethod.CRYPTO]: 'Crypto & Bank Card - Bank Card, BTC, ETH, USDT',
 };
 

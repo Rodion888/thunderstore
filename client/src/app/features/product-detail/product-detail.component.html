@@ -3,7 +3,7 @@
 <div class="product-container" *ngIf="product">
   <div class="image-carousel">
     <app-button type="arrow-left" class="arrow left" (buttonClick)="prevImage()"></app-button>
-    <img [src]="currentImage" [alt]="product.name" class="product-image" (click)="openFullscreen(currentImage)"/>
+    <img [src]="currentImage" [alt]="product.name | translate" class="product-image" (click)="openFullscreen(currentImage)"/>
     <app-button type="arrow-right" class="arrow right" (buttonClick)="nextImage()"></app-button>
   </div>
 
@@ -12,27 +12,25 @@
   </div>
 
   <div class="product-info">
-    <span class="title">{{ product.name }}</span>
+    <span class="title">{{ product.name | translate }}</span>
 
     <div class="product-description text-default">
-      <span>Материал: интерлок премиум 260гр</span>
-      <span>Состав: 95% хлопок, 5% эластан</span>
-      <span>Технология печати: термотрансфер</span>
-      <span>Размеры: {{ getAvailableSizesText() }}</span>
-      <span>Рост модели: 185, на модели размер L</span>
+      <span>{{ 'material' | translate }}: <span class="color-tertiary">интерлок премиум 260гр</span></span>
+      <span>{{ 'composition' | translate }}: <span class="color-tertiary">95% хлопок, 5% эластан</span></span>
+      <span>{{ 'sizes' | translate }}: <span class="color-tertiary">{{ getAvailableSizesText() }}</span></span>
     </div>
 
-    <span class="subtitle">Цена: <span class="color-secondary text-bold text-md">{{ product.price | currencyConverter }}</span></span>
+    <span class="subtitle">{{ 'price' | translate }}: <span class="color-secondary text-bold text-md">{{ product.price | appCurrency }}</span></span>
 
     <div class="actions">
       <app-custom-select
-        [label]="'Размер футболки'"
+        [label]="'t-shirt-size' | translate"
         [options]="getAvailableSizes()"
         [(ngModel)]="selectedSize"
-        placeholder="Выберите размер">
+        placeholder="{{ 'select-size' | translate }}">
       </app-custom-select>
 
-      <app-button type="btn" class="add-to-cart" [text]="'Добавить в корзину'" (buttonClick)="addToCart()"></app-button>
+      <app-button type="btn" class="add-to-cart" [text]="'add-to-cart' | translate" (buttonClick)="addToCart()"></app-button>
     </div>
   </div>
 </div>

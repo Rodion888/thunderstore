@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Product } from '../../../core/types/product.types';
-import { CurrencyConverterPipe } from '../../pipes/currency-converter.pipe';
+import { AppCurrencyPipe } from '../../pipes/currency.pipe';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-card',
   templateUrl: './card.component.html',
   styleUrls: ['./card.component.scss'],
-  imports: [CommonModule, RouterModule, CurrencyConverterPipe],
+  imports: [CommonModule, RouterModule, AppCurrencyPipe, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CardComponent {
