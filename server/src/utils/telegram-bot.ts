@@ -18,8 +18,17 @@ export class TelegramBot {
     this.telegramEnabled = process.env.TELEGRAM_ENABLED === 'true' && !!this.telegramToken && !!this.telegramChatId;
     
     if (this.telegramEnabled) {
-      this.fastify.log.info('Telegram bot enabled');
+      this.fastify.log.info('Telegram bot enabled with token: ' + this.telegramToken?.substring(0, 5) + '...' + this.telegramToken?.substring(this.telegramToken.length - 5));
+      this.fastify.log.info('Telegram chat ID: ' + this.telegramChatId);
       this.setupWebhook();
+    } else {
+      if (!process.env.TELEGRAM_ENABLED || process.env.TELEGRAM_ENABLED !== 'true') {
+        this.fastify.log.info('Telegram bot disabled (TELEGRAM_ENABLED not set to true)');
+      } else if (!this.telegramToken) {
+        this.fastify.log.error('Telegram bot token missing (TELEGRAM_BOT_TOKEN not set)');
+      } else if (!this.telegramChatId) {
+        this.fastify.log.error('Telegram chat ID missing (TELEGRAM_CHAT_ID not set)');
+      }
     }
   }
   
@@ -32,7 +41,20 @@ export class TelegramBot {
         return;
       }
       
+      this.fastify.log.info('Setting up Telegram webhook with APP_URL: ' + baseUrl);
+      
+      // Сначала удалим текущий вебхук, если он есть
+      const deleteResponse = await fetch(`https://api.telegram.org/bot${this.telegramToken}/deleteWebhook`);
+      const deleteResult = await deleteResponse.json();
+      this.fastify.log.info('Delete webhook result:', deleteResult);
+      
+      // Добавим небольшую задержку
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Установим новый вебхук
       const webhookUrl = `${baseUrl}/api/telegram/webhook`;
+      this.fastify.log.info('Setting webhook URL to: ' + webhookUrl);
+      
       const response = await fetch(`https://api.telegram.org/bot${this.telegramToken}/setWebhook`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,9 +62,18 @@ export class TelegramBot {
       });
       
       const result = await response.json();
+      this.fastify.log.info('Set webhook result:', result);
       
       if (result.ok) {
-        this.fastify.log.info(`Telegram webhook set to ${webhookUrl}`);
+        // Получим информацию о текущем вебхуке для проверки
+        const infoResponse = await fetch(`https://api.telegram.org/bot${this.telegramToken}/getWebhookInfo`);
+        const infoResult = await infoResponse.json();
+        this.fastify.log.info('Webhook info:', infoResult);
+        
+        // Отправим тестовое сообщение
+        if (this.telegramChatId) {
+          this.sendMessage('🤖 *Бот инициализирован*\n\nВебхук настроен на ' + webhookUrl);
+        }
       } else {
         this.fastify.log.error(`Failed to set Telegram webhook: ${result.description}`);
       }
