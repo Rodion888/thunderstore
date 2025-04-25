@@ -149,7 +149,7 @@ export class TelegramBot {
       
       let message = '📋 *Последние заказы:*\n\n';
       
-      result.rows.forEach(order => {
+      result.rows.forEach((order: { id: number; status: string; total_price: number; created_at: string; email: string }) => {
         const date = new Date(order.created_at).toLocaleString('ru');
         const statusEmoji = this.getStatusEmoji(order.status);
         
@@ -206,7 +206,7 @@ export class TelegramBot {
       
       message += `📦 *Товары в заказе:*\n`;
       
-      itemsResult.rows.forEach(item => {
+      itemsResult.rows.forEach((item: { name: string; product_id: number; size: string; quantity: number; price: number }) => {
         message += `▫️ ${item.name} (ID: ${item.product_id})\n`;
         message += `   Размер: ${item.size}, Количество: ${item.quantity}, Цена: ${item.price} ₽\n`;
       });
@@ -263,7 +263,7 @@ export class TelegramBot {
       
       let message = '🛍️ *Список товаров:*\n\n';
       
-      result.rows.forEach(product => {
+      result.rows.forEach((product: { id: number; name: string; price: number; categories: string }) => {
         message += `🔸 *${product.name}* (ID: ${product.id})\n`;
         message += `💰 Цена: ${product.price} ₽\n`;
         message += `🏷️ Категории: ${product.categories || 'не указаны'}\n\n`;
@@ -370,7 +370,7 @@ export class TelegramBot {
       
       if (statusStats.rows.length > 0) {
         message += `📋 *Статусы заказов:*\n`;
-        statusStats.rows.forEach(row => {
+        statusStats.rows.forEach((row: { status: string; count: number }) => {
           const statusEmoji = this.getStatusEmoji(row.status);
           message += `${statusEmoji} ${row.status}: ${row.count}\n`;
         });
