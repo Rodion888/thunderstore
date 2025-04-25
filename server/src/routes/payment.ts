@@ -46,10 +46,15 @@ export default async function paymentRoutes(fastify: FastifyInstance): Promise<v
 
       const result = await response.json();
 
+      // Проверяем структуру ответа от API - может быть либо data.url, либо payurl
       if (result?.data?.url) {
-        // Логируем успешное создание платежа
+        // Логируем успешное создание платежа (старый формат API)
         logger.logPaymentCreated(orderId, result.data.url);
         return reply.send({ paymentUrl: result.data.url });
+      } else if (result?.payurl && result?.status === 'success') {
+        // Логируем успешное создание платежа (новый формат API)
+        logger.logPaymentCreated(orderId, result.payurl);
+        return reply.send({ paymentUrl: result.payurl });
       }
 
       // Логируем ошибку
@@ -74,12 +79,20 @@ export default async function paymentRoutes(fastify: FastifyInstance): Promise<v
         // Логируем успешную оплату
         logger.logPaymentSuccess(data.order_id);
         
-        // TODO: Обновить статус заказа в базе данных
-        // Пример:
-        // await pool.query(
-        //   `UPDATE orders SET status = 'paid' WHERE id = $1`,
-        //   [data.order_id]
-        // );
+        // Обновляем статус заказа в базе данных
+        try {
+          await fastify.pool.query(
+            `UPDATE orders SET status = 'paid' WHERE id = $1`,
+            [data.order_id]
+          );
+          
+          // Отправляем более подробное уведомление в Telegram
+          if (fastify.telegramBot) {
+            fastify.telegramBot.sendMessage(`💵 *Оплата успешно поступила*\n\nЗаказ №${data.order_id} оплачен.\nСумма: ${data.amount} ${data.currency}\nИспользуйте /order ${data.order_id} для подробностей.`);
+          }
+        } catch (dbError) {
+          fastify.log.error(`Error updating order status: ${dbError}`);
+        }
       }
 
       return reply.send({ status: 'ok' });

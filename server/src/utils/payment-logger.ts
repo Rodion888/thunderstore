@@ -47,6 +47,17 @@ export class PaymentLogger {
   }
   
   private async sendTelegramNotification(message: string) {
+    // Проверяем, доступен ли TelegramBot через fastify
+    if (this.fastify.telegramBot) {
+      return this.fastify.telegramBot.sendPaymentNotification(message);
+    } else if (this.telegramEnabled) {
+      // Используем старый способ отправки, если бот не инициализирован
+      this.sendMessageDirect(message);
+    }
+  }
+  
+  // Прямая отправка сообщения в Telegram (резервный вариант)
+  private async sendMessageDirect(message: string) {
     if (!this.telegramEnabled) return;
     
     try {

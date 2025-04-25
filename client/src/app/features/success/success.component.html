@@ -1,4 +1,14 @@
 <div class="success-container">
-  <h1>Оплата успешно завершена!</h1>
-  <p>Спасибо за покупку. Мы отправим вам уведомление о статусе заказа.</p>
+  <div class="success-content">
+    <div class="success-icon">
+      <span class="check-mark">✓</span>
+    </div>
+    
+    <h1>Оплата успешно завершена!</h1>
+    
+    <p *ngIf="orderId">Номер заказа: <strong>{{ orderId }}</strong></p>
+    <p>Спасибо за покупку. Мы отправим вам уведомление о статусе заказа.</p>
+    
+    <button class="home-button" (click)="goToHome()">Вернуться на главную</button>
+  </div>
 </div>
