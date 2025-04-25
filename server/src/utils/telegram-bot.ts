@@ -85,10 +85,16 @@ export class TelegramBot {
   
   // Обработка входящих команд от бота
   public async handleCommand(text: string, chatId: string) {
+    // Временно отключаем проверку chatId для тестирования
+    /*
     // Проверяем, имеет ли пользователь доступ к командам
     if (chatId !== this.telegramChatId) {
       return this.sendMessage('У вас нет доступа к этой команде.', chatId);
     }
+    */
+    
+    // Добавляем логирование для отладки
+    this.fastify.log.info(`Received command "${text}" from chat ID: ${chatId}, expected: ${this.telegramChatId}`);
     
     // Разбиваем команду на части
     const parts = text.split(' ');
