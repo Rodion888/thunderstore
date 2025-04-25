@@ -1,6 +1,7 @@
 import { FastifyRequest as OriginalRequest } from 'fastify';
 import { FastifyInstance } from 'fastify';
-import { Pool } from 'pg';
+import pg from 'pg';
+const { Pool } = pg;
 import { TelegramBot } from '../utils/telegram-bot.js';
 
 declare module 'fastify' {
@@ -12,7 +13,7 @@ declare module 'fastify' {
   }
 
   interface FastifyInstance {
-    pool: Pool;
+    pool: any;
     telegramBot: TelegramBot;
   }
 }

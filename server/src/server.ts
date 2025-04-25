@@ -2,7 +2,8 @@ import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import fastifyCors from '@fastify/cors';
 import fastifyCookie from '@fastify/cookie';
 import crypto from 'node:crypto';
-import { Pool } from 'pg';
+import pg from 'pg';
+const { Pool } = pg;
 
 import productRoutes from './routes/products.js';
 import cartRoutes from './routes/cart.js';

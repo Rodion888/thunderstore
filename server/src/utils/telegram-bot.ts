@@ -1,15 +1,16 @@
 import { FastifyInstance } from 'fastify';
 import fetch from 'node-fetch';
-import { Pool } from 'pg';
+import pg from 'pg';
+const { Pool } = pg;
 
 export class TelegramBot {
   private fastify: FastifyInstance;
   private telegramEnabled: boolean;
   private telegramToken: string | undefined;
   private telegramChatId: string | undefined;
-  private pool: Pool;
+  private pool: any;
   
-  constructor(fastify: FastifyInstance, pool: Pool) {
+  constructor(fastify: FastifyInstance, pool: any) {
     this.fastify = fastify;
     this.pool = pool;
     
