@@ -142,10 +142,9 @@ export class TelegramBot {
   private async getOrders(chatId: string) {
     try {
       const result = await this.pool.query(`
-        SELECT o.id, o.status, o.total_price, o.created_at, u.email
-        FROM orders o
-        LEFT JOIN users u ON o.user_id = u.id
-        ORDER BY o.created_at DESC
+        SELECT id, status, total_amount, created_at
+        FROM orders
+        ORDER BY created_at DESC
         LIMIT 10
       `);
       
@@ -155,15 +154,14 @@ export class TelegramBot {
       
       let message = '📋 *Последние заказы:*\n\n';
       
-      result.rows.forEach((order: { id: number; status: string; total_price: number; created_at: string; email: string }) => {
+      result.rows.forEach((order: { id: number; status: string; total_amount: number; created_at: string; }) => {
         const date = new Date(order.created_at).toLocaleString('ru');
         const statusEmoji = this.getStatusEmoji(order.status);
         
         message += `🔹 *Заказ #${order.id}*\n`;
         message += `${statusEmoji} Статус: ${order.status}\n`;
-        message += `💰 Сумма: ${order.total_price} ₽\n`;
-        message += `📅 Дата: ${date}\n`;
-        message += `✉️ Email: ${order.email || 'не указан'}\n\n`;
+        message += `💰 Сумма: ${order.total_amount} ₽\n`;
+        message += `📅 Дата: ${date}\n\n`;
       });
       
       message += 'Для подробностей используйте /order [id]';
@@ -179,10 +177,9 @@ export class TelegramBot {
   private async getOrder(orderId: number, chatId: string) {
     try {
       const orderResult = await this.pool.query(`
-        SELECT o.id, o.status, o.total_price, o.created_at, o.shipping_address, u.email, u.phone
-        FROM orders o
-        LEFT JOIN users u ON o.user_id = u.id
-        WHERE o.id = $1
+        SELECT id, status, total_amount, created_at, address
+        FROM orders
+        WHERE id = $1
       `, [orderId]);
       
       if (orderResult.rows.length === 0) {
@@ -191,31 +188,41 @@ export class TelegramBot {
       
       const order = orderResult.rows[0];
       
-      // Получаем товары в заказе
-      const itemsResult = await this.pool.query(`
-        SELECT oi.quantity, oi.price, oi.size, p.name, p.id as product_id
-        FROM order_items oi
-        JOIN products p ON oi.product_id = p.id
-        WHERE oi.order_id = $1
-      `, [orderId]);
+      // Получаем товары в заказе - проверяем, есть ли items как JSON или нужно брать из order_items
+      let orderItems = [];
+      try {
+        // Пробуем получить items из JSON поля в таблице orders
+        const itemsResult = await this.pool.query(`
+          SELECT items FROM orders WHERE id = $1
+        `, [orderId]);
+        
+        if (itemsResult.rows.length > 0 && itemsResult.rows[0].items) {
+          orderItems = JSON.parse(itemsResult.rows[0].items);
+        }
+      } catch (error) {
+        this.fastify.log.error(`Error parsing order items for order ${orderId}: ${error}`);
+        // Если не получилось, то оставляем пустой массив
+      }
       
       const date = new Date(order.created_at).toLocaleString('ru');
       const statusEmoji = this.getStatusEmoji(order.status);
       
       let message = `🛍️ *Информация о заказе #${order.id}*\n\n`;
       message += `${statusEmoji} *Статус:* ${order.status}\n`;
-      message += `💰 *Сумма:* ${order.total_price} ₽\n`;
+      message += `💰 *Сумма:* ${order.total_amount} ₽\n`;
       message += `📅 *Дата:* ${date}\n`;
-      message += `✉️ *Email:* ${order.email || 'не указан'}\n`;
-      message += `📞 *Телефон:* ${order.phone || 'не указан'}\n`;
-      message += `🏠 *Адрес:* ${order.shipping_address || 'не указан'}\n\n`;
+      message += `🏠 *Адрес:* ${order.address || 'не указан'}\n\n`;
       
       message += `📦 *Товары в заказе:*\n`;
       
-      itemsResult.rows.forEach((item: { name: string; product_id: number; size: string; quantity: number; price: number }) => {
-        message += `▫️ ${item.name} (ID: ${item.product_id})\n`;
-        message += `   Размер: ${item.size}, Количество: ${item.quantity}, Цена: ${item.price} ₽\n`;
-      });
+      if (orderItems.length > 0) {
+        orderItems.forEach((item: any) => {
+          message += `▫️ ${item.name} (ID: ${item.id})\n`;
+          message += `   Размер: ${item.size}, Количество: ${item.quantity}, Цена: ${item.price} ₽\n`;
+        });
+      } else {
+        message += "Информация о товарах недоступна\n";
+      }
       
       message += '\n*Управление заказом:*\n';
       message += 'Изменить статус: /status ' + order.id + ' [new_status]\n';
@@ -257,7 +264,7 @@ export class TelegramBot {
   private async getProducts(chatId: string) {
     try {
       const result = await this.pool.query(`
-        SELECT id, name, price, array_to_string(categories, ', ') as categories
+        SELECT id, name, price, stock
         FROM products
         ORDER BY id
         LIMIT 10
@@ -269,10 +276,16 @@ export class TelegramBot {
       
       let message = '🛍️ *Список товаров:*\n\n';
       
-      result.rows.forEach((product: { id: number; name: string; price: number; categories: string }) => {
+      result.rows.forEach((product: { id: number; name: string; price: number; stock?: Record<string, number>; }) => {
         message += `🔸 *${product.name}* (ID: ${product.id})\n`;
         message += `💰 Цена: ${product.price} ₽\n`;
-        message += `🏷️ Категории: ${product.categories || 'не указаны'}\n\n`;
+        
+        // Добавляем информацию о наличии размеров
+        if (product.stock && Object.keys(product.stock).length > 0) {
+          message += `📊 Размеры в наличии: ${Object.keys(product.stock).join(', ')}\n`;
+        }
+        
+        message += '\n';
       });
       
       message += 'Для подробностей используйте /product [id]';
@@ -288,7 +301,7 @@ export class TelegramBot {
   private async getProduct(productId: number, chatId: string) {
     try {
       const result = await this.pool.query(`
-        SELECT id, name, price, description, array_to_string(categories, ', ') as categories, stock
+        SELECT id, name, price, description, stock
         FROM products
         WHERE id = $1
       `, [productId]);
@@ -302,13 +315,12 @@ export class TelegramBot {
       let message = `📦 *Информация о товаре #${product.id}*\n\n`;
       message += `📌 *Название:* ${product.name}\n`;
       message += `💰 *Цена:* ${product.price} ₽\n`;
-      message += `🏷️ *Категории:* ${product.categories || 'не указаны'}\n`;
       message += `📝 *Описание:* ${(product.description || '').substring(0, 100)}${product.description && product.description.length > 100 ? '...' : ''}\n\n`;
       
       message += `🗃️ *Наличие:*\n`;
       
-      // Преобразуем JSON объект stock в читаемый формат
-      const stock = product.stock ? product.stock : {};
+      // Проверяем, что stock существует и является объектом
+      const stock = product.stock && typeof product.stock === 'object' ? product.stock : {};
       Object.entries(stock).forEach(([size, quantity]) => {
         message += `▫️ ${size}: ${quantity}\n`;
       });
@@ -353,7 +365,7 @@ export class TelegramBot {
         SELECT 
           COUNT(*) as total_orders,
           COUNT(CASE WHEN status = 'paid' OR status = 'shipped' OR status = 'delivered' THEN 1 END) as completed_orders,
-          COALESCE(SUM(CASE WHEN status = 'paid' OR status = 'shipped' OR status = 'delivered' THEN total_price ELSE 0 END), 0) as revenue
+          COALESCE(SUM(CASE WHEN status = 'paid' OR status = 'shipped' OR status = 'delivered' THEN total_amount ELSE 0 END), 0) as revenue
         FROM orders
         WHERE ${timeCondition}
       `);
