@@ -1,7 +1,5 @@
 import { FastifyInstance } from 'fastify';
 import fetch from 'node-fetch';
-import pg from 'pg';
-const { Pool } = pg;
 
 export class TelegramBot {
   private fastify: FastifyInstance;
@@ -33,7 +31,7 @@ export class TelegramBot {
     }
   }
   
-  // Настраиваем вебхук для получения сообщений от бота
+  // Setup webhook to receive messages from the bot
   private async setupWebhook() {
     try {
       const baseUrl = process.env.APP_URL;
@@ -44,15 +42,15 @@ export class TelegramBot {
       
       this.fastify.log.info('Setting up Telegram webhook with APP_URL: ' + baseUrl);
       
-      // Сначала удалим текущий вебхук, если он есть
+      // First delete the current webhook if it exists
       const deleteResponse = await fetch(`https://api.telegram.org/bot${this.telegramToken}/deleteWebhook`);
       const deleteResult = await deleteResponse.json();
       this.fastify.log.info('Delete webhook result:', deleteResult);
       
-      // Добавим небольшую задержку
+      // Add a small delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Установим новый вебхук
+      // Set up a new webhook
       const webhookUrl = `${baseUrl}/api/telegram/webhook`;
       this.fastify.log.info('Setting webhook URL to: ' + webhookUrl);
       
@@ -66,14 +64,14 @@ export class TelegramBot {
       this.fastify.log.info('Set webhook result:', result);
       
       if (result.ok) {
-        // Получим информацию о текущем вебхуке для проверки
+        // Get information about the current webhook for verification
         const infoResponse = await fetch(`https://api.telegram.org/bot${this.telegramToken}/getWebhookInfo`);
         const infoResult = await infoResponse.json();
         this.fastify.log.info('Webhook info:', infoResult);
         
-        // Отправим тестовое сообщение
+        // Send a test message
         if (this.telegramChatId) {
-          this.sendMessage('🤖 *Бот инициализирован*\n\nВебхук настроен на ' + webhookUrl);
+          this.sendMessage('🤖 *Bot initialized*\n\nWebhook configured at ' + webhookUrl);
         }
       } else {
         this.fastify.log.error(`Failed to set Telegram webhook: ${result.description}`);
@@ -83,20 +81,17 @@ export class TelegramBot {
     }
   }
   
-  // Обработка входящих команд от бота
+  // Process incoming bot commands
   public async handleCommand(text: string, chatId: string) {
-    // Временно отключаем проверку chatId для тестирования
-    /*
-    // Проверяем, имеет ли пользователь доступ к командам
+    // Check if the user has access to commands
     if (chatId !== this.telegramChatId) {
       return this.sendMessage('У вас нет доступа к этой команде.', chatId);
     }
-    */
     
-    // Добавляем логирование для отладки
-    this.fastify.log.info(`Received command "${text}" from chat ID: ${chatId}, expected: ${this.telegramChatId}`);
+    // Add logging for debugging
+    this.fastify.log.info(`Received command "${text}" from chat ID: ${chatId}`);
     
-    // Разбиваем команду на части
+    // Split the command into parts
     const parts = text.split(' ');
     const command = parts[0].toLowerCase();
     
@@ -138,15 +133,19 @@ export class TelegramBot {
     }
   }
   
-  // Получение списка последних заказов
+  // Get a list of recent orders
   private async getOrders(chatId: string) {
     try {
+      this.fastify.log.info('Executing getOrders command');
+      
       const result = await this.pool.query(`
-        SELECT id, status, total_amount, created_at
+        SELECT id, status, total_amount, created_at 
         FROM orders
         ORDER BY created_at DESC
         LIMIT 10
       `);
+      
+      this.fastify.log.info(`Found ${result.rows.length} orders`);
       
       if (result.rows.length === 0) {
         return this.sendMessage('📊 Заказов пока нет.', chatId);
@@ -169,39 +168,49 @@ export class TelegramBot {
       return this.sendMessage(message, chatId);
     } catch (error) {
       this.fastify.log.error(`Error getting orders: ${error}`);
+      if (error instanceof Error) {
+        this.fastify.log.error(`Error stack: ${error.stack}`);
+      }
       return this.sendMessage(`❌ Ошибка при получении заказов: ${error}`, chatId);
     }
   }
   
-  // Получение информации о конкретном заказе
+  // Get information about a specific order
   private async getOrder(orderId: number, chatId: string) {
     try {
+      this.fastify.log.info(`Executing getOrder command for order ID: ${orderId}`);
+      
       const orderResult = await this.pool.query(`
-        SELECT id, status, total_amount, created_at, address
+        SELECT id, status, total_amount, created_at, address, full_name, phone, email, city, comment, payment_method, delivery_type
         FROM orders
         WHERE id = $1
       `, [orderId]);
+      
+      this.fastify.log.info(`Order query result rows: ${orderResult.rows.length}`);
       
       if (orderResult.rows.length === 0) {
         return this.sendMessage(`❌ Заказ #${orderId} не найден.`, chatId);
       }
       
       const order = orderResult.rows[0];
+      this.fastify.log.debug(`Order object: ${JSON.stringify(order)}`);
       
-      // Получаем товары в заказе - проверяем, есть ли items как JSON или нужно брать из order_items
+      // Get items in the order from JSON field
       let orderItems = [];
       try {
-        // Пробуем получить items из JSON поля в таблице orders
         const itemsResult = await this.pool.query(`
           SELECT items FROM orders WHERE id = $1
         `, [orderId]);
         
         if (itemsResult.rows.length > 0 && itemsResult.rows[0].items) {
           orderItems = JSON.parse(itemsResult.rows[0].items);
+          this.fastify.log.info(`Order items parsed, found ${orderItems.length} items`);
         }
       } catch (error) {
         this.fastify.log.error(`Error parsing order items for order ${orderId}: ${error}`);
-        // Если не получилось, то оставляем пустой массив
+        if (error instanceof Error) {
+          this.fastify.log.error(`Error stack: ${error.stack}`);
+        }
       }
       
       const date = new Date(order.created_at).toLocaleString('ru');
@@ -210,10 +219,21 @@ export class TelegramBot {
       let message = `🛍️ *Информация о заказе #${order.id}*\n\n`;
       message += `${statusEmoji} *Статус:* ${order.status}\n`;
       message += `💰 *Сумма:* ${order.total_amount} ₽\n`;
-      message += `📅 *Дата:* ${date}\n`;
-      message += `🏠 *Адрес:* ${order.address || 'не указан'}\n\n`;
+      message += `📅 *Дата:* ${date}\n\n`;
       
-      message += `📦 *Товары в заказе:*\n`;
+      message += `👤 *Получатель:* ${order.full_name}\n`;
+      message += `📱 *Телефон:* ${order.phone}\n`;
+      message += `✉️ *Email:* ${order.email}\n`;
+      message += `🏙️ *Город:* ${order.city}\n`;
+      message += `🏠 *Адрес:* ${order.address || 'не указан'}\n`;
+      message += `🚚 *Тип доставки:* ${order.delivery_type}\n`;
+      message += `💳 *Способ оплаты:* ${order.payment_method}\n`;
+      
+      if (order.comment) {
+        message += `📝 *Комментарий:* ${order.comment}\n`;
+      }
+      
+      message += `\n📦 *Товары в заказе:*\n`;
       
       if (orderItems.length > 0) {
         orderItems.forEach((item: any) => {
@@ -226,7 +246,7 @@ export class TelegramBot {
       
       message += '\n*Управление заказом:*\n';
       message += 'Изменить статус: /status ' + order.id + ' [new_status]\n';
-      message += 'Доступные статусы: pending, paid, shipped, delivered, cancelled';
+      message += 'Доступные статусы: processing, pending, paid, shipped, delivered, cancelled';
       
       return this.sendMessage(message, chatId);
     } catch (error) {
@@ -235,9 +255,9 @@ export class TelegramBot {
     }
   }
   
-  // Обновление статуса заказа
+  // Update order status
   private async updateOrderStatus(orderId: number, newStatus: string, chatId: string) {
-    const validStatuses = ['pending', 'paid', 'shipped', 'delivered', 'cancelled'];
+    const validStatuses = ['processing', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'];
     
     if (!validStatuses.includes(newStatus)) {
       return this.sendMessage(`❌ Недопустимый статус. Используйте один из: ${validStatuses.join(', ')}`, chatId);
@@ -260,7 +280,7 @@ export class TelegramBot {
     }
   }
   
-  // Получение списка товаров
+  // Get a list of products
   private async getProducts(chatId: string) {
     try {
       const result = await this.pool.query(`
@@ -280,7 +300,7 @@ export class TelegramBot {
         message += `🔸 *${product.name}* (ID: ${product.id})\n`;
         message += `💰 Цена: ${product.price} ₽\n`;
         
-        // Добавляем информацию о наличии размеров
+        // Add information about available sizes
         if (product.stock && Object.keys(product.stock).length > 0) {
           message += `📊 Размеры в наличии: ${Object.keys(product.stock).join(', ')}\n`;
         }
@@ -297,7 +317,7 @@ export class TelegramBot {
     }
   }
   
-  // Получение информации о конкретном товаре
+  // Get information about a specific product
   private async getProduct(productId: number, chatId: string) {
     try {
       const result = await this.pool.query(`
@@ -319,7 +339,7 @@ export class TelegramBot {
       
       message += `🗃️ *Наличие:*\n`;
       
-      // Проверяем, что stock существует и является объектом
+      // Check that stock exists and is an object
       const stock = product.stock && typeof product.stock === 'object' ? product.stock : {};
       Object.entries(stock).forEach(([size, quantity]) => {
         message += `▫️ ${size}: ${quantity}\n`;
@@ -332,9 +352,11 @@ export class TelegramBot {
     }
   }
   
-  // Получение статистики
+  // Get statistics
   private async getStats(period: string, chatId: string) {
     try {
+      this.fastify.log.info(`Executing getStats command for period: ${period}`);
+      
       let timeCondition = '';
       let periodName = '';
       
@@ -360,7 +382,7 @@ export class TelegramBot {
           periodName = 'сегодня';
       }
       
-      // Общая статистика заказов
+      // General order statistics
       const orderStats = await this.pool.query(`
         SELECT 
           COUNT(*) as total_orders,
@@ -370,7 +392,7 @@ export class TelegramBot {
         WHERE ${timeCondition}
       `);
       
-      // Статистика по статусам
+      // Status statistics
       const statusStats = await this.pool.query(`
         SELECT status, COUNT(*) as count
         FROM orders
@@ -401,7 +423,7 @@ export class TelegramBot {
     }
   }
   
-  // Отправка справки о командах
+  // Send command help
   private async sendHelp(chatId: string) {
     const message = `
 🔍 *Доступные команды:*
@@ -420,6 +442,14 @@ export class TelegramBot {
 /stats week - статистика за неделю
 /stats month - статистика за месяц
 
+*Статусы заказов:*
+processing - в обработке
+pending - ожидание
+paid - оплачен
+shipped - отправлен
+delivered - доставлен
+cancelled - отменен
+
 *Прочее:*
 /help - список команд
 `;
@@ -427,10 +457,13 @@ export class TelegramBot {
     return this.sendMessage(message, chatId);
   }
   
-  // Вспомогательная функция для эмодзи статусов
+  // Helper function for status emojis
   private getStatusEmoji(status: string): string {
-    switch (status) {
+    if (!status) return '❓';
+    
+    switch (status.toLowerCase()) {
       case 'pending': return '⏳';
+      case 'processing': return '🔄';
       case 'paid': return '💵';
       case 'shipped': return '🚚';
       case 'delivered': return '✅';
@@ -439,7 +472,7 @@ export class TelegramBot {
     }
   }
   
-  // Отправка сообщения в Telegram
+  // Send a message to Telegram
   public async sendMessage(message: string, chatId: string = this.telegramChatId!) {
     if (!this.telegramEnabled || !this.telegramToken) return;
     
@@ -466,7 +499,7 @@ export class TelegramBot {
     }
   }
   
-  // Отправка уведомления о платеже (используется с существующим PaymentLogger)
+  // Send payment notification (used with existing PaymentLogger)
   public async sendPaymentNotification(message: string) {
     return this.sendMessage(message);
   }
