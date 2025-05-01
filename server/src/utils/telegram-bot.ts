@@ -93,8 +93,8 @@ export class TelegramBot {
       return this.sendMessage(`Your Chat ID: ${chatId}\nTELEGRAM_CHAT_ID from .env: ${this.telegramChatId}`, chatId);
     }
 
-    // Check if the user has access to commands
-    if (chatId !== this.telegramChatId) {
+    // Check if the user has access to commands - convert both to strings for comparison
+    if (String(chatId) !== String(this.telegramChatId)) {
       return this.sendMessage(`You don't have access to this command. Your Chat ID: ${chatId}`, chatId);
     }
     
