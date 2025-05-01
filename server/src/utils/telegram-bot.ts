@@ -83,13 +83,20 @@ export class TelegramBot {
   
   // Process incoming bot commands
   public async handleCommand(text: string, chatId: string) {
+    // Add diagnostic output with chat ID
+    this.fastify.log.info(`Received command "${text}" from chat ID: ${chatId}`);
+    this.fastify.log.info(`Expected chat ID from env: ${this.telegramChatId}`);
+    this.fastify.log.info(`Chat IDs match: ${chatId === this.telegramChatId}`);
+
+    // Special diagnostic command - always allow this
+    if (text === '/chatid') {
+      return this.sendMessage(`Your Chat ID: ${chatId}\nTELEGRAM_CHAT_ID from .env: ${this.telegramChatId}`, chatId);
+    }
+
     // Check if the user has access to commands
     if (chatId !== this.telegramChatId) {
-      return this.sendMessage('У вас нет доступа к этой команде.', chatId);
+      return this.sendMessage(`You don't have access to this command. Your Chat ID: ${chatId}`, chatId);
     }
-    
-    // Add logging for debugging
-    this.fastify.log.info(`Received command "${text}" from chat ID: ${chatId}`);
     
     // Split the command into parts
     const parts = text.split(' ');
@@ -98,7 +105,7 @@ export class TelegramBot {
     try {
       switch (command) {
         case '/start':
-          return this.sendMessage('👋 Привет! Я бот для управления ThunderStore.\n\nДоступные команды:\n/orders - список последних заказов\n/order [id] - информация о заказе\n/products - список товаров\n/help - список всех команд', chatId);
+          return this.sendMessage('👋 Hello! I am the ThunderStore management bot.\n\nAvailable commands:\n/orders - list of recent orders\n/order [id] - order information\n/products - list of products\n/help - list of all commands', chatId);
         
         case '/help':
           return this.sendHelp(chatId);
@@ -107,29 +114,29 @@ export class TelegramBot {
           return this.getOrders(chatId);
         
         case '/order':
-          if (parts.length < 2) return this.sendMessage('⚠️ Укажите ID заказа: /order [id]', chatId);
+          if (parts.length < 2) return this.sendMessage('⚠️ Please specify order ID: /order [id]', chatId);
           return this.getOrder(parseInt(parts[1]), chatId);
         
         case '/products':
           return this.getProducts(chatId);
         
         case '/product':
-          if (parts.length < 2) return this.sendMessage('⚠️ Укажите ID товара: /product [id]', chatId);
+          if (parts.length < 2) return this.sendMessage('⚠️ Please specify product ID: /product [id]', chatId);
           return this.getProduct(parseInt(parts[1]), chatId);
         
         case '/status':
-          if (parts.length < 3) return this.sendMessage('⚠️ Укажите ID заказа и статус: /status [id] [status]', chatId);
+          if (parts.length < 3) return this.sendMessage('⚠️ Please specify order ID and status: /status [id] [status]', chatId);
           return this.updateOrderStatus(parseInt(parts[1]), parts[2], chatId);
         
         case '/stats':
           return this.getStats(parts[1] || 'today', chatId);
         
         default:
-          return this.sendMessage('⚠️ Неизвестная команда. Используйте /help для списка команд.', chatId);
+          return this.sendMessage('⚠️ Unknown command. Use /help for a list of commands.', chatId);
       }
     } catch (error) {
       this.fastify.log.error(`Error handling command ${command}: ${error}`);
-      return this.sendMessage(`❌ Произошла ошибка: ${error}`, chatId);
+      return this.sendMessage(`❌ An error occurred: ${error}`, chatId);
     }
   }
   
@@ -148,22 +155,22 @@ export class TelegramBot {
       this.fastify.log.info(`Found ${result.rows.length} orders`);
       
       if (result.rows.length === 0) {
-        return this.sendMessage('📊 Заказов пока нет.', chatId);
+        return this.sendMessage('📊 Orders are not available yet.', chatId);
       }
       
-      let message = '📋 *Последние заказы:*\n\n';
+      let message = '📋 *Recent Orders:*\n\n';
       
       result.rows.forEach((order: { id: number; status: string; total_amount: number; created_at: string; }) => {
-        const date = new Date(order.created_at).toLocaleString('ru');
+        const date = new Date(order.created_at).toLocaleString('en');
         const statusEmoji = this.getStatusEmoji(order.status);
         
-        message += `🔹 *Заказ #${order.id}*\n`;
-        message += `${statusEmoji} Статус: ${order.status}\n`;
-        message += `💰 Сумма: ${order.total_amount} ₽\n`;
-        message += `📅 Дата: ${date}\n\n`;
+        message += `🔹 *Order #${order.id}*\n`;
+        message += `${statusEmoji} Status: ${order.status}\n`;
+        message += `💰 Amount: ${order.total_amount} ₽\n`;
+        message += `📅 Date: ${date}\n\n`;
       });
       
-      message += 'Для подробностей используйте /order [id]';
+      message += 'For more details, use /order [id]';
       
       return this.sendMessage(message, chatId);
     } catch (error) {
@@ -171,7 +178,7 @@ export class TelegramBot {
       if (error instanceof Error) {
         this.fastify.log.error(`Error stack: ${error.stack}`);
       }
-      return this.sendMessage(`❌ Ошибка при получении заказов: ${error}`, chatId);
+      return this.sendMessage(`❌ Error getting orders: ${error}`, chatId);
     }
   }
   
@@ -189,7 +196,7 @@ export class TelegramBot {
       this.fastify.log.info(`Order query result rows: ${orderResult.rows.length}`);
       
       if (orderResult.rows.length === 0) {
-        return this.sendMessage(`❌ Заказ #${orderId} не найден.`, chatId);
+        return this.sendMessage(`❌ Order #${orderId} not found.`, chatId);
       }
       
       const order = orderResult.rows[0];
@@ -213,45 +220,45 @@ export class TelegramBot {
         }
       }
       
-      const date = new Date(order.created_at).toLocaleString('ru');
+      const date = new Date(order.created_at).toLocaleString('en');
       const statusEmoji = this.getStatusEmoji(order.status);
       
-      let message = `🛍️ *Информация о заказе #${order.id}*\n\n`;
-      message += `${statusEmoji} *Статус:* ${order.status}\n`;
-      message += `💰 *Сумма:* ${order.total_amount} ₽\n`;
-      message += `📅 *Дата:* ${date}\n\n`;
+      let message = `🛍️ *Order Information #${order.id}*\n\n`;
+      message += `${statusEmoji} *Status:* ${order.status}\n`;
+      message += `💰 *Amount:* ${order.total_amount} ₽\n`;
+      message += `📅 *Date:* ${date}\n\n`;
       
-      message += `👤 *Получатель:* ${order.full_name}\n`;
-      message += `📱 *Телефон:* ${order.phone}\n`;
+      message += `👤 *Recipient:* ${order.full_name}\n`;
+      message += `📱 *Phone:* ${order.phone}\n`;
       message += `✉️ *Email:* ${order.email}\n`;
-      message += `🏙️ *Город:* ${order.city}\n`;
-      message += `🏠 *Адрес:* ${order.address || 'не указан'}\n`;
-      message += `🚚 *Тип доставки:* ${order.delivery_type}\n`;
-      message += `💳 *Способ оплаты:* ${order.payment_method}\n`;
+      message += `🏙️ *City:* ${order.city}\n`;
+      message += `🏠 *Address:* ${order.address || 'not specified'}\n`;
+      message += `🚚 *Delivery Type:* ${order.delivery_type}\n`;
+      message += `💳 *Payment Method:* ${order.payment_method}\n`;
       
       if (order.comment) {
-        message += `📝 *Комментарий:* ${order.comment}\n`;
+        message += `📝 *Comment:* ${order.comment}\n`;
       }
       
-      message += `\n📦 *Товары в заказе:*\n`;
+      message += `\n📦 *Items in Order:*\n`;
       
       if (orderItems.length > 0) {
         orderItems.forEach((item: any) => {
           message += `▫️ ${item.name} (ID: ${item.id})\n`;
-          message += `   Размер: ${item.size}, Количество: ${item.quantity}, Цена: ${item.price} ₽\n`;
+          message += `   Size: ${item.size}, Quantity: ${item.quantity}, Price: ${item.price} ₽\n`;
         });
       } else {
-        message += "Информация о товарах недоступна\n";
+        message += "Item information not available\n";
       }
       
-      message += '\n*Управление заказом:*\n';
-      message += 'Изменить статус: /status ' + order.id + ' [new_status]\n';
-      message += 'Доступные статусы: processing, pending, paid, shipped, delivered, cancelled';
+      message += '\n*Order Management:*\n';
+      message += 'Change status: /status ' + order.id + ' [new_status]\n';
+      message += 'Available statuses: processing, pending, paid, shipped, delivered, cancelled';
       
       return this.sendMessage(message, chatId);
     } catch (error) {
       this.fastify.log.error(`Error getting order ${orderId}: ${error}`);
-      return this.sendMessage(`❌ Ошибка при получении заказа #${orderId}: ${error}`, chatId);
+      return this.sendMessage(`❌ Error getting order #${orderId}: ${error}`, chatId);
     }
   }
   
@@ -260,7 +267,7 @@ export class TelegramBot {
     const validStatuses = ['processing', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'];
     
     if (!validStatuses.includes(newStatus)) {
-      return this.sendMessage(`❌ Недопустимый статус. Используйте один из: ${validStatuses.join(', ')}`, chatId);
+      return this.sendMessage(`❌ Invalid status. Use one of: ${validStatuses.join(', ')}`, chatId);
     }
     
     try {
@@ -269,14 +276,14 @@ export class TelegramBot {
       `, [newStatus, orderId]);
       
       if (result.rows.length === 0) {
-        return this.sendMessage(`❌ Заказ #${orderId} не найден.`, chatId);
+        return this.sendMessage(`❌ Order #${orderId} not found.`, chatId);
       }
       
       const statusEmoji = this.getStatusEmoji(newStatus);
-      return this.sendMessage(`✅ Статус заказа #${orderId} обновлен на ${statusEmoji} ${newStatus}`, chatId);
+      return this.sendMessage(`✅ Order #${orderId} status updated to ${statusEmoji} ${newStatus}`, chatId);
     } catch (error) {
       this.fastify.log.error(`Error updating order status ${orderId}: ${error}`);
-      return this.sendMessage(`❌ Ошибка при обновлении статуса заказа #${orderId}: ${error}`, chatId);
+      return this.sendMessage(`❌ Error updating order status #${orderId}: ${error}`, chatId);
     }
   }
   
@@ -291,29 +298,29 @@ export class TelegramBot {
       `);
       
       if (result.rows.length === 0) {
-        return this.sendMessage('📊 Товаров пока нет.', chatId);
+        return this.sendMessage('📊 Products are not available yet.', chatId);
       }
       
-      let message = '🛍️ *Список товаров:*\n\n';
+      let message = '🛍️ *Product List:*\n\n';
       
       result.rows.forEach((product: { id: number; name: string; price: number; stock?: Record<string, number>; }) => {
         message += `🔸 *${product.name}* (ID: ${product.id})\n`;
-        message += `💰 Цена: ${product.price} ₽\n`;
+        message += `💰 Price: ${product.price} ₽\n`;
         
         // Add information about available sizes
         if (product.stock && Object.keys(product.stock).length > 0) {
-          message += `📊 Размеры в наличии: ${Object.keys(product.stock).join(', ')}\n`;
+          message += `📊 Available Sizes: ${Object.keys(product.stock).join(', ')}\n`;
         }
         
         message += '\n';
       });
       
-      message += 'Для подробностей используйте /product [id]';
+      message += 'For more details, use /product [id]';
       
       return this.sendMessage(message, chatId);
     } catch (error) {
       this.fastify.log.error(`Error getting products: ${error}`);
-      return this.sendMessage(`❌ Ошибка при получении товаров: ${error}`, chatId);
+      return this.sendMessage(`❌ Error getting products: ${error}`, chatId);
     }
   }
   
@@ -327,17 +334,17 @@ export class TelegramBot {
       `, [productId]);
       
       if (result.rows.length === 0) {
-        return this.sendMessage(`❌ Товар #${productId} не найден.`, chatId);
+        return this.sendMessage(`❌ Product #${productId} not found.`, chatId);
       }
       
       const product = result.rows[0];
       
-      let message = `📦 *Информация о товаре #${product.id}*\n\n`;
-      message += `📌 *Название:* ${product.name}\n`;
-      message += `💰 *Цена:* ${product.price} ₽\n`;
-      message += `📝 *Описание:* ${(product.description || '').substring(0, 100)}${product.description && product.description.length > 100 ? '...' : ''}\n\n`;
+      let message = `📦 *Product Information #${product.id}*\n\n`;
+      message += `📌 *Name:* ${product.name}\n`;
+      message += `💰 *Price:* ${product.price} ₽\n`;
+      message += `📝 *Description:* ${(product.description || '').substring(0, 100)}${product.description && product.description.length > 100 ? '...' : ''}\n\n`;
       
-      message += `🗃️ *Наличие:*\n`;
+      message += `🗃️ *Stock:*\n`;
       
       // Check that stock exists and is an object
       const stock = product.stock && typeof product.stock === 'object' ? product.stock : {};
@@ -348,7 +355,7 @@ export class TelegramBot {
       return this.sendMessage(message, chatId);
     } catch (error) {
       this.fastify.log.error(`Error getting product ${productId}: ${error}`);
-      return this.sendMessage(`❌ Ошибка при получении товара #${productId}: ${error}`, chatId);
+      return this.sendMessage(`❌ Error getting product #${productId}: ${error}`, chatId);
     }
   }
   
@@ -363,23 +370,23 @@ export class TelegramBot {
       switch (period.toLowerCase()) {
         case 'today':
           timeCondition = 'created_at >= CURRENT_DATE';
-          periodName = 'сегодня';
+          periodName = 'today';
           break;
         case 'yesterday':
           timeCondition = 'created_at >= CURRENT_DATE - INTERVAL \'1 day\' AND created_at < CURRENT_DATE';
-          periodName = 'вчера';
+          periodName = 'yesterday';
           break;
         case 'week':
           timeCondition = 'created_at >= CURRENT_DATE - INTERVAL \'7 days\'';
-          periodName = 'за неделю';
+          periodName = 'the week';
           break;
         case 'month':
           timeCondition = 'created_at >= CURRENT_DATE - INTERVAL \'30 days\'';
-          periodName = 'за месяц';
+          periodName = 'the month';
           break;
         default:
           timeCondition = 'created_at >= CURRENT_DATE';
-          periodName = 'сегодня';
+          periodName = 'today';
       }
       
       // General order statistics
@@ -403,13 +410,13 @@ export class TelegramBot {
       
       const stats = orderStats.rows[0];
       
-      let message = `📊 *Статистика ${periodName}*\n\n`;
-      message += `🛒 *Всего заказов:* ${stats.total_orders}\n`;
-      message += `✅ *Выполнено:* ${stats.completed_orders}\n`;
-      message += `💰 *Выручка:* ${stats.revenue} ₽\n\n`;
+      let message = `📊 *Statistics for ${periodName}*\n\n`;
+      message += `🛒 *Total Orders:* ${stats.total_orders}\n`;
+      message += `✅ *Completed Orders:* ${stats.completed_orders}\n`;
+      message += `💰 *Revenue:* ${stats.revenue} ₽\n\n`;
       
       if (statusStats.rows.length > 0) {
-        message += `📋 *Статусы заказов:*\n`;
+        message += `📋 *Order Statuses:*\n`;
         statusStats.rows.forEach((row: { status: string; count: number }) => {
           const statusEmoji = this.getStatusEmoji(row.status);
           message += `${statusEmoji} ${row.status}: ${row.count}\n`;
@@ -419,39 +426,39 @@ export class TelegramBot {
       return this.sendMessage(message, chatId);
     } catch (error) {
       this.fastify.log.error(`Error getting stats for ${period}: ${error}`);
-      return this.sendMessage(`❌ Ошибка при получении статистики: ${error}`, chatId);
+      return this.sendMessage(`❌ Error getting statistics: ${error}`, chatId);
     }
   }
   
   // Send command help
   private async sendHelp(chatId: string) {
     const message = `
-🔍 *Доступные команды:*
+🔍 *Available Commands:*
 
-*Заказы:*
-/orders - список последних заказов
-/order [id] - информация о заказе
-/status [id] [status] - изменить статус заказа
+*Orders:*
+/orders - list of recent orders
+/order [id] - order information
+/status [id] [status] - change order status
 
-*Товары:*
-/products - список товаров
-/product [id] - информация о товаре
+*Products:*
+/products - list of products
+/product [id] - product information
 
-*Статистика:*
-/stats today - статистика за сегодня
-/stats week - статистика за неделю
-/stats month - статистика за месяц
+*Statistics:*
+/stats today - statistics for today
+/stats week - statistics for the week
+/stats month - statistics for the month
 
-*Статусы заказов:*
-processing - в обработке
-pending - ожидание
-paid - оплачен
-shipped - отправлен
-delivered - доставлен
-cancelled - отменен
+*Order Statuses:*
+processing - in progress
+pending - waiting
+paid - paid
+shipped - shipped
+delivered - delivered
+cancelled - cancelled
 
-*Прочее:*
-/help - список команд
+*Other:*
+/help - list of commands
 `;
     
     return this.sendMessage(message, chatId);
