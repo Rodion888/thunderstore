@@ -11,7 +11,7 @@ interface TelegramWebhookBody {
 }
 
 export default async function telegramRoutes(fastify: FastifyInstance, telegramBot: TelegramBot): Promise<void> {
-  // Маршрут для обработки вебхуков от Telegram
+  // Route for handling Telegram webhooks
   fastify.post('/telegram/webhook', async (request: FastifyRequest<{
     Body: TelegramWebhookBody
   }>, reply: FastifyReply) => {
@@ -19,7 +19,7 @@ export default async function telegramRoutes(fastify: FastifyInstance, telegramB
       fastify.log.info('Received Telegram webhook:', request.body);
       const update = request.body;
       
-      // Проверяем, что это сообщение с текстом
+      // Check if this is a text message
       if (update.message?.text && update.message?.chat?.id) {
         await telegramBot.handleCommand(update.message.text, update.message.chat.id);
       }
@@ -31,7 +31,7 @@ export default async function telegramRoutes(fastify: FastifyInstance, telegramB
     }
   });
   
-  // Добавляем тестовый маршрут для проверки работы бота
+  // Add test route to verify bot functionality
   fastify.get('/telegram/test', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const chatId = process.env.TELEGRAM_CHAT_ID;

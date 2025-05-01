@@ -47,16 +47,16 @@ export class PaymentLogger {
   }
   
   private async sendTelegramNotification(message: string) {
-    // Проверяем, доступен ли TelegramBot через fastify
+    // Check if TelegramBot is available through fastify
     if (this.fastify.telegramBot) {
       return this.fastify.telegramBot.sendPaymentNotification(message);
     } else if (this.telegramEnabled) {
-      // Используем старый способ отправки, если бот не инициализирован
+      // Use direct message sending if bot is not initialized
       this.sendMessageDirect(message);
     }
   }
   
-  // Прямая отправка сообщения в Telegram (резервный вариант)
+  // Direct message sending to Telegram (fallback method)
   private async sendMessageDirect(message: string) {
     if (!this.telegramEnabled) return;
     
