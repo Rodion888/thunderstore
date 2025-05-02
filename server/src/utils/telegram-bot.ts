@@ -211,6 +211,7 @@ export class TelegramBot {
   // Handle incoming messages (not commands)
   public async handleMessage(message: any) {
     const chatId = message.chat.id;
+    this.fastify.log.info('[handleMessage] message:', JSON.stringify(message, null, 2));
     
     // Check if we're in product creation process
     const creationState = this.productCreationStates.get(chatId);
@@ -240,35 +241,38 @@ export class TelegramBot {
   // Handle product creation steps
   private async handleProductCreation(message: any, state: ProductCreationState) {
     const chatId = state.chatId;
-
+    this.fastify.log.info(`[handleProductCreation] step: ${state.step}, message:`, JSON.stringify(message, null, 2));
     try {
       switch (state.step) {
         case 'name':
+          this.fastify.log.info('[handleProductCreation] Got product name:', message.text);
           state.data.name = message.text;
           state.step = 'front_image_name';
           return this.sendMessage('📝 Please send the filename for the front image (without extension):', chatId);
-
         case 'front_image_name':
+          this.fastify.log.info('[handleProductCreation] Got front image name:', message.text);
           state.data.frontImageName = message.text;
           state.step = 'front_image';
           return this.sendMessage('🖼 Please send the front image of the product:', chatId);
-
         case 'front_image':
+          this.fastify.log.info('[handleProductCreation] Waiting for front image, message:', JSON.stringify(message, null, 2));
           if (!message.photo) {
+            this.fastify.log.warn('[handleProductCreation] No photo found in message!');
             return this.sendMessage('⚠️ Please send an image:', chatId);
           }
           const frontImage = await this.handleProductImage(message.photo, 'front', state);
           state.data.images = { front: frontImage, back: '' };
           state.step = 'back_image_name';
           return this.sendMessage('📝 Please send the filename for the back image (without extension):', chatId);
-
         case 'back_image_name':
+          this.fastify.log.info('[handleProductCreation] Got back image name:', message.text);
           state.data.backImageName = message.text;
           state.step = 'back_image';
           return this.sendMessage('🖼 Please send the back image of the product:', chatId);
-
         case 'back_image':
+          this.fastify.log.info('[handleProductCreation] Waiting for back image, message:', JSON.stringify(message, null, 2));
           if (!message.photo) {
+            this.fastify.log.warn('[handleProductCreation] No photo found in message!');
             return this.sendMessage('⚠️ Please send an image:', chatId);
           }
           const backImage = await this.handleProductImage(message.photo, 'back', state);
@@ -277,34 +281,33 @@ export class TelegramBot {
           }
           state.step = 'price';
           return this.sendMessage('💰 Please send the product price (number only):', chatId);
-
         case 'price':
+          this.fastify.log.info('[handleProductCreation] Got price:', message.text);
           const price = parseInt(message.text);
           if (isNaN(price)) {
+            this.fastify.log.warn('[handleProductCreation] Invalid price:', message.text);
             return this.sendMessage('⚠️ Please send a valid number for price:', chatId);
           }
           state.data.price = price;
           state.step = 'stock';
           return this.sendMessage('📦 Please send the stock information in format:\n' +
             'S:10, M:15, L:20, XL:10', chatId);
-
         case 'stock':
+          this.fastify.log.info('[handleProductCreation] Got stock:', message.text);
           try {
             const stock = this.parseStockInput(message.text);
             state.data.stock = stock;
-            
-            // Save the product
             await this.saveNewProduct(state.data);
-            
-            // Clear the state
             this.productCreationStates.delete(chatId);
-            
+            this.fastify.log.info('[handleProductCreation] Product successfully created!');
             return this.sendMessage('✅ Product successfully created!', chatId);
           } catch (error) {
+            this.fastify.log.error('[handleProductCreation] Invalid stock format:', error);
             return this.sendMessage('⚠️ Invalid stock format. Please use format:\nS:10, M:15, L:20, XL:10', chatId);
           }
       }
     } catch (error) {
+      this.fastify.log.error('[handleProductCreation] Error:', error);
       this.productCreationStates.delete(chatId);
       return this.sendMessage(`❌ Error creating product: ${error}`, chatId);
     }

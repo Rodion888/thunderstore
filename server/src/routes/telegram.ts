@@ -16,7 +16,7 @@ export default async function telegramRoutes(fastify: FastifyInstance, telegramB
     Body: TelegramWebhookBody
   }>, reply: FastifyReply) => {
     try {
-      fastify.log.info('Received Telegram webhook:', request.body);
+      fastify.log.info('Received Telegram webhook body (pretty): ' + JSON.stringify(request.body, null, 2));
       const update = request.body;
       
       // Check if this is a text message

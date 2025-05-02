@@ -70,8 +70,21 @@ jobs:
             echo "window.env = { NG_APP_API_URL: '${{ secrets.NG_APP_API_URL }}', NG_APP_WS_URL: '${{ secrets.NG_APP_WS_URL }}' };" > client/dist/assets/env.js
 
             echo "Rebuilding and restarting containers"
-            docker-compose down
+            # Build new containers without stopping the old ones
             docker-compose build --no-cache
+            
+            # Start new containers with a different project name
+            COMPOSE_PROJECT_NAME=thunderstore_new docker-compose up -d
+            
+            # Wait for new containers to be healthy
+            sleep 10
+            
+            # Switch traffic to new containers
+            docker-compose down
+            COMPOSE_PROJECT_NAME=thunderstore_new docker-compose ps -q | xargs -I {} docker rename {} thunderstore_{}
             docker-compose up -d
+            
+            # Clean up old containers
+            docker ps -a --filter "name=thunderstore_new" -q | xargs -r docker rm -f
 
             echo "Deployment completed successfully!"
