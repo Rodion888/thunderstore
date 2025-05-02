@@ -39,8 +39,7 @@ jobs:
             PG_HBA=$(find /etc/postgresql -name pg_hba.conf | head -n 1)
             
             sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" $PG_CONF
-            echo "host    all             all             172.16.0.0/12            md5" >> $PG_HBA
-            echo "host    all             all             127.0.0.1/32            md5" >> $PG_HBA
+            echo "host    all             all             172.0.0.0/8            md5" >> $PG_HBA
             
             systemctl restart postgresql
 
@@ -49,10 +48,10 @@ jobs:
             echo "CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}" >> server/.env
             
             echo "PGUSER=${{ secrets.PG_USER }}" >> server/.env
-            echo "PGHOST=postgres" >> server/.env
+            echo "PGHOST=host.docker.internal" >> server/.env
             echo "PGDATABASE=${{ secrets.PG_DATABASE }}" >> server/.env
             echo "PGPASSWORD=${{ secrets.PG_PASSWORD }}" >> server/.env
-            echo "PGPORT=5432" >> server/.env
+            echo "PGPORT=${{ secrets.PG_PORT }}" >> server/.env
             
             echo "CRYPTO_CLOUD_API_KEY=${{ secrets.CRYPTO_CLOUD_API_KEY }}" >> server/.env
             echo "CRYPTO_CLOUD_SHOP_ID=${{ secrets.CRYPTO_CLOUD_SHOP_ID }}" >> server/.env
@@ -71,11 +70,7 @@ jobs:
             echo "window.env = { NG_APP_API_URL: '${{ secrets.NG_APP_API_URL }}', NG_APP_WS_URL: '${{ secrets.NG_APP_WS_URL }}' };" > client/dist/assets/env.js
 
             echo "Rebuilding and restarting containers"
-            # Force remove all containers and networks
-            docker-compose down --remove-orphans
-            docker ps -a -q | xargs -r docker rm -f
-            
-            # Build and start containers
+            docker-compose down
             docker-compose build --no-cache
             docker-compose up -d
 
