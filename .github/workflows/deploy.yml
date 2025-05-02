@@ -71,13 +71,19 @@ jobs:
             echo "window.env = { NG_APP_API_URL: '${{ secrets.NG_APP_API_URL }}', NG_APP_WS_URL: '${{ secrets.NG_APP_WS_URL }}' };" > client/dist/assets/env.js
 
             echo "Rebuilding and restarting containers"
-            # Build new containers without stopping the old ones
+            # Stop and remove existing containers
+            docker-compose down || true
+            
+            # Remove any existing containers with the new name
+            docker ps -a --filter "name=thunderstore_new" -q | xargs -r docker rm -f
+            
+            # Build new containers
             docker-compose build --no-cache
             
             # Start new containers with a different project name
             COMPOSE_PROJECT_NAME=thunderstore_new docker-compose up -d
             
-            # Wait for new containers to be healthy
+            # Wait for database to be ready
             echo "Waiting for database to be ready..."
             for i in {1..30}; do
               if docker-compose exec -T db pg_isready -U ${{ secrets.PG_USER }} -d ${{ secrets.PG_DATABASE }}; then
@@ -86,6 +92,7 @@ jobs:
               fi
               if [ $i -eq 30 ]; then
                 echo "Database failed to start in time"
+                docker-compose logs db
                 exit 1
               fi
               sleep 2
@@ -98,5 +105,9 @@ jobs:
             
             # Clean up old containers
             docker ps -a --filter "name=thunderstore_new" -q | xargs -r docker rm -f
+            
+            # Show logs if something went wrong
+            docker-compose logs backend
+            docker-compose logs db
 
             echo "Deployment completed successfully!"
