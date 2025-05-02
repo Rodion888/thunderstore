@@ -294,9 +294,13 @@ export class TelegramBot {
           return this.sendMessage('📦 Please send the stock information in format:\n' +
             'S:10, M:15, L:20, XL:10', chatId);
         case 'stock':
-          this.fastify.log.info('[handleProductCreation] Got stock:', message.text);
+          this.fastify.log.info('[handleProductCreation] Got stock:', message.text, message.caption);
+          const stockInput = message.text || message.caption;
+          if (!stockInput) {
+            return this.sendMessage('⚠️ Please send the stock as text, e.g. S:10, M:15, L:20, XL:10', chatId);
+          }
           try {
-            const stock = this.parseStockInput(message.text);
+            const stock = this.parseStockInput(stockInput);
             state.data.stock = stock;
             await this.saveNewProduct(state.data);
             this.productCreationStates.delete(chatId);
@@ -736,8 +740,13 @@ export class TelegramBot {
           break;
 
         case 'stock':
+          const stockInput = message.text || message.caption;
+          if (!stockInput) {
+            return this.sendMessage('⚠️ Please send the stock as text, e.g. S:10, M:15, L:20, XL:10', chatId);
+          }
           try {
-            state.data.stock = this.parseStockInput(message.text);
+            const stock = this.parseStockInput(stockInput);
+            state.data.stock = stock;
           } catch (error) {
             return this.sendMessage('⚠️ Invalid stock format. Please use format:\nS:10, M:15, L:20, XL:10', chatId);
           }
