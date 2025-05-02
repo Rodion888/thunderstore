@@ -316,20 +316,18 @@ export class TelegramBot {
 
   // Parse stock input from string to object
   private parseStockInput(input: string): Record<string, number> {
+    this.fastify.log.info('[parseStockInput] input:', JSON.stringify(input));
     const stock: Record<string, number> = {};
-    const pairs = input.split(',').map(pair => pair.trim());
-    
+    const pairs = input.split(',').map(pair => pair.trim()).filter(Boolean);
+
     for (const pair of pairs) {
       const [size, quantity] = pair.split(':').map(part => part.trim());
-      const quantityNum = parseInt(quantity);
-      
-      if (!size || isNaN(quantityNum)) {
+      const quantityNum = Number(quantity);
+      if (!size || !quantity || isNaN(quantityNum)) {
         throw new Error('Invalid stock format');
       }
-      
       stock[size] = quantityNum;
     }
-    
     return stock;
   }
 
@@ -384,7 +382,13 @@ export class TelegramBot {
       // Insert new product
       await this.pool.query(
         'INSERT INTO products (id, name, price, stock, images) VALUES ($1, $2, $3, $4, $5)',
-        [nextId, productData.name, productData.price, productData.stock, productData.images]
+        [
+          nextId,
+          productData.name,
+          productData.price,
+          JSON.stringify(productData.stock),
+          productData.images
+        ]
       );
     } catch (error) {
       throw new Error(`Failed to save product: ${error}`);
@@ -780,7 +784,13 @@ export class TelegramBot {
     try {
       await this.pool.query(
         'UPDATE products SET name = $1, price = $2, stock = $3, images = $4 WHERE id = $5',
-        [productData.name, productData.price, productData.stock, productData.images, productId]
+        [
+          productData.name,
+          productData.price,
+          JSON.stringify(productData.stock),
+          productData.images,
+          productId
+        ]
       );
     } catch (error) {
       throw new Error(`Failed to update product: ${error}`);
