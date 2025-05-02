@@ -28,6 +28,12 @@ jobs:
             mkdir -p /var/www/thunder-store/logs
             chmod 755 /var/www/thunder-store/logs
 
+            echo "Setting up product storage"
+            mkdir -p /var/www/thunder-store/uploads/products
+            chmod 755 /var/www/thunder-store/uploads
+            chmod 755 /var/www/thunder-store/uploads/products
+            mkdir -p /var/www/thunder-store/client/src/assets/static
+
             echo "Configuring PostgreSQL for remote connections"
             PG_CONF=$(find /etc/postgresql -name postgresql.conf | head -n 1)
             PG_HBA=$(find /etc/postgresql -name pg_hba.conf | head -n 1)

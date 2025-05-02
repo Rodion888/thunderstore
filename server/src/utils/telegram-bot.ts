@@ -1,5 +1,23 @@
 import { FastifyInstance } from 'fastify';
+import { Product } from '../types/index.js';
+
 import fetch from 'node-fetch';
+import path from 'path';
+import sharp from 'sharp';
+import fs from 'fs/promises';
+
+interface ProductCreationState {
+  step: 'name' | 'price' | 'stock' | 'front_image' | 'back_image' | 'complete' | 'front_image_name' | 'back_image_name';
+  data: Partial<Product>;
+  chatId: string;
+}
+
+interface ProductEditingState {
+  productId: number;
+  step: 'selecting' | 'name' | 'price' | 'stock' | 'front_image' | 'back_image';
+  data: Partial<Product>;
+  chatId: string;
+}
 
 export class TelegramBot {
   private fastify: FastifyInstance;
@@ -8,6 +26,14 @@ export class TelegramBot {
   private telegramChatId: string | undefined;
   private pool: any;
   
+  // Store product creation/editing state
+  private productCreationStates: Map<string, ProductCreationState> = new Map();
+  private productEditingStates: Map<string, ProductEditingState> = new Map();
+
+  // File storage paths
+  private uploadsDir: string;
+  private staticDir: string;
+
   constructor(fastify: FastifyInstance, pool: any) {
     this.fastify = fastify;
     this.pool = pool;
@@ -16,10 +42,19 @@ export class TelegramBot {
     this.telegramChatId = process.env.TELEGRAM_CHAT_ID;
     this.telegramEnabled = process.env.TELEGRAM_ENABLED === 'true' && !!this.telegramToken && !!this.telegramChatId;
     
+    // Initialize storage paths
+    this.uploadsDir = path.join(process.cwd(), '..', 'uploads', 'products');
+    this.staticDir = path.join(process.cwd(), '..', 'client', 'src', 'assets', 'static');
+    
     if (this.telegramEnabled) {
       this.fastify.log.info('Telegram bot enabled with token: ' + this.telegramToken?.substring(0, 5) + '...' + this.telegramToken?.substring(this.telegramToken.length - 5));
       this.fastify.log.info('Telegram chat ID: ' + this.telegramChatId);
+      this.fastify.log.info('Uploads directory: ' + this.uploadsDir);
+      this.fastify.log.info('Static directory: ' + this.staticDir);
       this.setupWebhook();
+      this.initializeStorage().catch(err => {
+        this.fastify.log.error(`Failed to initialize storage: ${err}`);
+      });
     } else {
       if (!process.env.TELEGRAM_ENABLED || process.env.TELEGRAM_ENABLED !== 'true') {
         this.fastify.log.info('Telegram bot disabled (TELEGRAM_ENABLED not set to true)');
@@ -105,7 +140,18 @@ export class TelegramBot {
     try {
       switch (command) {
         case '/start':
-          return this.sendMessage('👋 Hello! I am the ThunderStore management bot.\n\nAvailable commands:\n/orders - list of recent orders\n/order [id] - order information\n/products - list of products\n/help - list of all commands', chatId);
+          return this.sendMessage('👋 *Welcome to ThunderStore Management Bot!*\n\n' +
+            '*Available Commands:*\n\n' +
+            '📦 *Products Management:*\n' +
+            '/products - View all products\n' +
+            '/product [id] - View product details\n' +
+            '/addproduct - Add new product\n' +
+            '/editproduct [id] - Edit product\n' +
+            '/deleteproduct [id] - Delete product\n\n' +
+            '🛍️ *Orders:*\n' +
+            '/orders - View recent orders\n' +
+            '/order [id] - View order details\n\n' +
+            'Use /help for detailed command information', chatId);
         
         case '/help':
           return this.sendHelp(chatId);
@@ -114,29 +160,230 @@ export class TelegramBot {
           return this.getOrders(chatId);
         
         case '/order':
-          if (parts.length < 2) return this.sendMessage('⚠️ Please specify order ID: /order [id]', chatId);
+          if (parts.length < 2) {
+            return this.sendMessage('⚠️ Please specify the order ID\n' +
+              '*Usage:* /order [id]\n' +
+              '*Example:* /order 123', chatId);
+          }
           return this.getOrder(parseInt(parts[1]), chatId);
         
         case '/products':
           return this.getProducts(chatId);
         
         case '/product':
-          if (parts.length < 2) return this.sendMessage('⚠️ Please specify product ID: /product [id]', chatId);
+          if (parts.length < 2) {
+            return this.sendMessage('⚠️ Please specify the product ID\n' +
+              '*Usage:* /product [id]\n' +
+              '*Example:* /product 1', chatId);
+          }
           return this.getProduct(parseInt(parts[1]), chatId);
-        
-        case '/status':
-          if (parts.length < 3) return this.sendMessage('⚠️ Please specify order ID and status: /status [id] [status]', chatId);
-          return this.updateOrderStatus(parseInt(parts[1]), parts[2], chatId);
-        
-        case '/stats':
-          return this.getStats(parts[1] || 'today', chatId);
+
+        case '/addproduct':
+          return this.startProductCreation(chatId);
+
+        case '/editproduct':
+          if (parts.length < 2) {
+            return this.sendMessage('⚠️ Please specify the product ID\n' +
+              '*Usage:* /editproduct [id]\n' +
+              '*Example:* /editproduct 1', chatId);
+          }
+          return this.startProductEditing(parseInt(parts[1]), chatId);
+
+        case '/deleteproduct':
+          if (parts.length < 2) {
+            return this.sendMessage('⚠️ Please specify the product ID to delete\n' +
+              '*Usage:* /deleteproduct [id]\n' +
+              '*Example:* /deleteproduct 1', chatId);
+          }
+          return this.deleteProduct(parseInt(parts[1]), chatId);
         
         default:
-          return this.sendMessage('⚠️ Unknown command. Use /help for a list of commands.', chatId);
+          return this.sendMessage('⚠️ Unknown command\n\n' +
+            'Use /help to see all available commands\n' +
+            'Or /start for a quick overview', chatId);
       }
     } catch (error) {
       this.fastify.log.error(`Error handling command ${command}: ${error}`);
-      return this.sendMessage(`❌ An error occurred: ${error}`, chatId);
+      return this.sendMessage(`❌ An error occurred while processing your command.\n\nError details: ${error}`, chatId);
+    }
+  }
+  
+  // Handle incoming messages (not commands)
+  public async handleMessage(message: any) {
+    const chatId = message.chat.id;
+    
+    // Check if we're in product creation process
+    const creationState = this.productCreationStates.get(chatId);
+    if (creationState) {
+      return this.handleProductCreation(message, creationState);
+    }
+
+    // Check if we're in product editing process
+    const editingState = this.productEditingStates.get(chatId);
+    if (editingState) {
+      return this.handleProductEditing(message, editingState);
+    }
+  }
+
+  // Start product creation process
+  private async startProductCreation(chatId: string) {
+    this.productCreationStates.set(chatId, {
+      step: 'name',
+      data: {},
+      chatId
+    });
+
+    return this.sendMessage('🆕 *Creating a new product*\n\n' +
+      'Please send the product name:', chatId);
+  }
+
+  // Handle product creation steps
+  private async handleProductCreation(message: any, state: ProductCreationState) {
+    const chatId = state.chatId;
+
+    try {
+      switch (state.step) {
+        case 'name':
+          state.data.name = message.text;
+          state.step = 'front_image_name';
+          return this.sendMessage('📝 Please send the filename for the front image (without extension):', chatId);
+
+        case 'front_image_name':
+          state.data.frontImageName = message.text;
+          state.step = 'front_image';
+          return this.sendMessage('🖼 Please send the front image of the product:', chatId);
+
+        case 'front_image':
+          if (!message.photo) {
+            return this.sendMessage('⚠️ Please send an image:', chatId);
+          }
+          const frontImage = await this.handleProductImage(message.photo, 'front', state);
+          state.data.images = { front: frontImage, back: '' };
+          state.step = 'back_image_name';
+          return this.sendMessage('📝 Please send the filename for the back image (without extension):', chatId);
+
+        case 'back_image_name':
+          state.data.backImageName = message.text;
+          state.step = 'back_image';
+          return this.sendMessage('🖼 Please send the back image of the product:', chatId);
+
+        case 'back_image':
+          if (!message.photo) {
+            return this.sendMessage('⚠️ Please send an image:', chatId);
+          }
+          const backImage = await this.handleProductImage(message.photo, 'back', state);
+          if (state.data.images) {
+            state.data.images.back = backImage;
+          }
+          state.step = 'price';
+          return this.sendMessage('💰 Please send the product price (number only):', chatId);
+
+        case 'price':
+          const price = parseInt(message.text);
+          if (isNaN(price)) {
+            return this.sendMessage('⚠️ Please send a valid number for price:', chatId);
+          }
+          state.data.price = price;
+          state.step = 'stock';
+          return this.sendMessage('📦 Please send the stock information in format:\n' +
+            'S:10, M:15, L:20, XL:10', chatId);
+
+        case 'stock':
+          try {
+            const stock = this.parseStockInput(message.text);
+            state.data.stock = stock;
+            
+            // Save the product
+            await this.saveNewProduct(state.data);
+            
+            // Clear the state
+            this.productCreationStates.delete(chatId);
+            
+            return this.sendMessage('✅ Product successfully created!', chatId);
+          } catch (error) {
+            return this.sendMessage('⚠️ Invalid stock format. Please use format:\nS:10, M:15, L:20, XL:10', chatId);
+          }
+      }
+    } catch (error) {
+      this.productCreationStates.delete(chatId);
+      return this.sendMessage(`❌ Error creating product: ${error}`, chatId);
+    }
+  }
+
+  // Parse stock input from string to object
+  private parseStockInput(input: string): Record<string, number> {
+    const stock: Record<string, number> = {};
+    const pairs = input.split(',').map(pair => pair.trim());
+    
+    for (const pair of pairs) {
+      const [size, quantity] = pair.split(':').map(part => part.trim());
+      const quantityNum = parseInt(quantity);
+      
+      if (!size || isNaN(quantityNum)) {
+        throw new Error('Invalid stock format');
+      }
+      
+      stock[size] = quantityNum;
+    }
+    
+    return stock;
+  }
+
+  // Handle product image upload
+  private async handleProductImage(photos: any[], type: 'front' | 'back', state: ProductCreationState | ProductEditingState): Promise<string> {
+    try {
+      // Get the highest quality photo
+      const photo = photos[photos.length - 1];
+      
+      // Get file path from Telegram
+      const fileResponse = await fetch(
+        `https://api.telegram.org/bot${this.telegramToken}/getFile?file_id=${photo.file_id}`
+      );
+      const fileData = await fileResponse.json();
+      
+      if (!fileData.ok || !fileData.result.file_path) {
+        throw new Error('Failed to get file path');
+      }
+
+      // Download file from Telegram
+      const fileUrl = `https://api.telegram.org/file/bot${this.telegramToken}/${fileData.result.file_path}`;
+      const imageResponse = await fetch(fileUrl);
+      const imageBuffer = await imageResponse.arrayBuffer();
+
+      // Use custom filename if provided, otherwise generate from product name
+      const filename = type === 'front' 
+        ? `${state.data.frontImageName || state.data.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.webp`
+        : `${state.data.backImageName || state.data.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-back.webp`;
+      
+      const savePath = path.join(this.uploadsDir, filename);
+
+      // Convert to webp and save
+      await sharp(Buffer.from(imageBuffer))
+        .webp({ quality: 80 }) // Optimize quality
+        .toFile(savePath);
+      
+      this.fastify.log.info(`Saved image to ${savePath}`);
+      
+      return filename;
+    } catch (error) {
+      throw new Error(`Failed to process image: ${error}`);
+    }
+  }
+
+  // Save new product to database
+  private async saveNewProduct(productData: Partial<Product>) {
+    try {
+      // Get max product ID
+      const maxIdResult = await this.pool.query('SELECT MAX(id) FROM products');
+      const nextId = (maxIdResult.rows[0].max || 0) + 1;
+
+      // Insert new product
+      await this.pool.query(
+        'INSERT INTO products (id, name, price, stock, images) VALUES ($1, $2, $3, $4, $5)',
+        [nextId, productData.name, productData.price, productData.stock, productData.images]
+      );
+    } catch (error) {
+      throw new Error(`Failed to save product: ${error}`);
     }
   }
   
@@ -262,31 +509,6 @@ export class TelegramBot {
     }
   }
   
-  // Update order status
-  private async updateOrderStatus(orderId: number, newStatus: string, chatId: string) {
-    const validStatuses = ['processing', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'];
-    
-    if (!validStatuses.includes(newStatus)) {
-      return this.sendMessage(`❌ Invalid status. Use one of: ${validStatuses.join(', ')}`, chatId);
-    }
-    
-    try {
-      const result = await this.pool.query(`
-        UPDATE orders SET status = $1 WHERE id = $2 RETURNING id
-      `, [newStatus, orderId]);
-      
-      if (result.rows.length === 0) {
-        return this.sendMessage(`❌ Order #${orderId} not found.`, chatId);
-      }
-      
-      const statusEmoji = this.getStatusEmoji(newStatus);
-      return this.sendMessage(`✅ Order #${orderId} status updated to ${statusEmoji} ${newStatus}`, chatId);
-    } catch (error) {
-      this.fastify.log.error(`Error updating order status ${orderId}: ${error}`);
-      return this.sendMessage(`❌ Error updating order status #${orderId}: ${error}`, chatId);
-    }
-  }
-  
   // Get a list of products
   private async getProducts(chatId: string) {
     try {
@@ -328,7 +550,7 @@ export class TelegramBot {
   private async getProduct(productId: number, chatId: string) {
     try {
       const result = await this.pool.query(`
-        SELECT id, name, price, description, stock
+        SELECT id, name, price, stock
         FROM products
         WHERE id = $1
       `, [productId]);
@@ -341,8 +563,7 @@ export class TelegramBot {
       
       let message = `📦 *Product Information #${product.id}*\n\n`;
       message += `📌 *Name:* ${product.name}\n`;
-      message += `💰 *Price:* ${product.price} ₽\n`;
-      message += `📝 *Description:* ${(product.description || '').substring(0, 100)}${product.description && product.description.length > 100 ? '...' : ''}\n\n`;
+      message += `💰 *Price:* ${product.price} ₽\n\n`;
       
       message += `🗃️ *Stock:*\n`;
       
@@ -359,106 +580,28 @@ export class TelegramBot {
     }
   }
   
-  // Get statistics
-  private async getStats(period: string, chatId: string) {
-    try {
-      this.fastify.log.info(`Executing getStats command for period: ${period}`);
-      
-      let timeCondition = '';
-      let periodName = '';
-      
-      switch (period.toLowerCase()) {
-        case 'today':
-          timeCondition = 'created_at >= CURRENT_DATE';
-          periodName = 'today';
-          break;
-        case 'yesterday':
-          timeCondition = 'created_at >= CURRENT_DATE - INTERVAL \'1 day\' AND created_at < CURRENT_DATE';
-          periodName = 'yesterday';
-          break;
-        case 'week':
-          timeCondition = 'created_at >= CURRENT_DATE - INTERVAL \'7 days\'';
-          periodName = 'the week';
-          break;
-        case 'month':
-          timeCondition = 'created_at >= CURRENT_DATE - INTERVAL \'30 days\'';
-          periodName = 'the month';
-          break;
-        default:
-          timeCondition = 'created_at >= CURRENT_DATE';
-          periodName = 'today';
-      }
-      
-      // General order statistics
-      const orderStats = await this.pool.query(`
-        SELECT 
-          COUNT(*) as total_orders,
-          COUNT(CASE WHEN status = 'paid' OR status = 'shipped' OR status = 'delivered' THEN 1 END) as completed_orders,
-          COALESCE(SUM(CASE WHEN status = 'paid' OR status = 'shipped' OR status = 'delivered' THEN total_amount ELSE 0 END), 0) as revenue
-        FROM orders
-        WHERE ${timeCondition}
-      `);
-      
-      // Status statistics
-      const statusStats = await this.pool.query(`
-        SELECT status, COUNT(*) as count
-        FROM orders
-        WHERE ${timeCondition}
-        GROUP BY status
-        ORDER BY count DESC
-      `);
-      
-      const stats = orderStats.rows[0];
-      
-      let message = `📊 *Statistics for ${periodName}*\n\n`;
-      message += `🛒 *Total Orders:* ${stats.total_orders}\n`;
-      message += `✅ *Completed Orders:* ${stats.completed_orders}\n`;
-      message += `💰 *Revenue:* ${stats.revenue} ₽\n\n`;
-      
-      if (statusStats.rows.length > 0) {
-        message += `📋 *Order Statuses:*\n`;
-        statusStats.rows.forEach((row: { status: string; count: number }) => {
-          const statusEmoji = this.getStatusEmoji(row.status);
-          message += `${statusEmoji} ${row.status}: ${row.count}\n`;
-        });
-      }
-      
-      return this.sendMessage(message, chatId);
-    } catch (error) {
-      this.fastify.log.error(`Error getting stats for ${period}: ${error}`);
-      return this.sendMessage(`❌ Error getting statistics: ${error}`, chatId);
-    }
-  }
-  
   // Send command help
   private async sendHelp(chatId: string) {
     const message = `
 🔍 *Available Commands:*
 
-*Orders:*
-/orders - list of recent orders
-/order [id] - order information
-/status [id] [status] - change order status
+📦 *Products Management:*
+/products - List all products
+/product [id] - View product details
+/addproduct - Add new product
+/editproduct [id] - Edit existing product
+/deleteproduct [id] - Delete product
 
-*Products:*
-/products - list of products
-/product [id] - product information
+🛍️ *Orders:*
+/orders - List recent orders
+/order [id] - View order details
 
-*Statistics:*
-/stats today - statistics for today
-/stats week - statistics for the week
-/stats month - statistics for the month
-
-*Order Statuses:*
-processing - in progress
-pending - waiting
-paid - paid
-shipped - shipped
-delivered - delivered
-cancelled - cancelled
-
-*Other:*
-/help - list of commands
+*Examples:*
+• View product: /product 1
+• Add product: /addproduct
+• Edit product: /editproduct 1
+• Delete product: /deleteproduct 1
+• View order: /order 123
 `;
     
     return this.sendMessage(message, chatId);
@@ -509,5 +652,184 @@ cancelled - cancelled
   // Send payment notification (used with existing PaymentLogger)
   public async sendPaymentNotification(message: string) {
     return this.sendMessage(message);
+  }
+
+  // Start product editing process
+  private async startProductEditing(productId: number, chatId: string) {
+    try {
+      // Get existing product
+      const result = await this.pool.query('SELECT * FROM products WHERE id = $1', [productId]);
+      const product = result.rows[0];
+      
+      if (!product) {
+        return this.sendMessage(`❌ Product with ID ${productId} not found`, chatId);
+      }
+
+      this.productEditingStates.set(chatId, {
+        productId,
+        step: 'selecting',
+        data: { ...product },
+        chatId
+      });
+
+      return this.sendMessage('🔄 *Editing product*\n\n' +
+        'What would you like to edit?\n\n' +
+        '1️⃣ Name\n' +
+        '2️⃣ Price\n' +
+        '3️⃣ Stock\n' +
+        '4️⃣ Front image\n' +
+        '5️⃣ Back image\n\n' +
+        'Send the number of what you want to edit:', chatId);
+    } catch (error) {
+      return this.sendMessage(`❌ Error starting product edit: ${error}`, chatId);
+    }
+  }
+
+  // Handle product editing steps
+  private async handleProductEditing(message: any, state: ProductEditingState) {
+    const chatId = state.chatId;
+
+    try {
+      if (state.step === 'selecting') {
+        switch (message.text) {
+          case '1':
+            state.step = 'name';
+            return this.sendMessage('✏️ Please send the new product name:', chatId);
+          case '2':
+            state.step = 'price';
+            return this.sendMessage('💰 Please send the new price (number only):', chatId);
+          case '3':
+            state.step = 'stock';
+            return this.sendMessage('📦 Please send the new stock information in format:\n' +
+              'S:10, M:15, L:20, XL:10', chatId);
+          case '4':
+            state.step = 'front_image';
+            return this.sendMessage('🖼 Please send the new front image:', chatId);
+          case '5':
+            state.step = 'back_image';
+            return this.sendMessage('🖼 Please send the new back image:', chatId);
+          default:
+            return this.sendMessage('⚠️ Please send a number between 1 and 5:', chatId);
+        }
+      }
+
+      switch (state.step) {
+        case 'name':
+          state.data.name = message.text;
+          break;
+
+        case 'price':
+          const price = parseInt(message.text);
+          if (isNaN(price)) {
+            return this.sendMessage('⚠️ Please send a valid number for price:', chatId);
+          }
+          state.data.price = price;
+          break;
+
+        case 'stock':
+          try {
+            state.data.stock = this.parseStockInput(message.text);
+          } catch (error) {
+            return this.sendMessage('⚠️ Invalid stock format. Please use format:\nS:10, M:15, L:20, XL:10', chatId);
+          }
+          break;
+
+        case 'front_image':
+          if (!message.photo) {
+            return this.sendMessage('⚠️ Please send an image:', chatId);
+          }
+          const frontImage = await this.handleProductImage(message.photo, 'front', state);
+          state.data.images = { 
+            front: frontImage,
+            back: state.data.images?.back || '' 
+          };
+          break;
+
+        case 'back_image':
+          if (!message.photo) {
+            return this.sendMessage('⚠️ Please send an image:', chatId);
+          }
+          const backImage = await this.handleProductImage(message.photo, 'back', state);
+          state.data.images = { 
+            front: state.data.images?.front || '',
+            back: backImage 
+          };
+          break;
+      }
+
+      // Save changes and clear state
+      await this.updateProduct(state.productId, state.data);
+      this.productEditingStates.delete(chatId);
+      
+      return this.sendMessage('✅ Product successfully updated!\n\n' +
+        'You can continue editing by using /editproduct command again.', chatId);
+
+    } catch (error) {
+      this.productEditingStates.delete(chatId);
+      return this.sendMessage(`❌ Error updating product: ${error}`, chatId);
+    }
+  }
+
+  // Update existing product
+  private async updateProduct(productId: number, productData: Partial<Product>) {
+    try {
+      await this.pool.query(
+        'UPDATE products SET name = $1, price = $2, stock = $3, images = $4 WHERE id = $5',
+        [productData.name, productData.price, productData.stock, productData.images, productId]
+      );
+    } catch (error) {
+      throw new Error(`Failed to update product: ${error}`);
+    }
+  }
+
+  // Delete product
+  private async deleteProduct(productId: number, chatId: string) {
+    try {
+      // Check if product exists
+      const result = await this.pool.query('SELECT * FROM products WHERE id = $1', [productId]);
+      if (result.rows.length === 0) {
+        return this.sendMessage(`❌ Product with ID ${productId} not found`, chatId);
+      }
+
+      // Delete product
+      await this.pool.query('DELETE FROM products WHERE id = $1', [productId]);
+      
+      // Delete product images
+      const product = result.rows[0];
+      await this.deleteProductImages(product);
+      
+      return this.sendMessage('✅ Product successfully deleted!', chatId);
+    } catch (error) {
+      return this.sendMessage(`❌ Error deleting product: ${error}`, chatId);
+    }
+  }
+
+  // Delete product images
+  private async deleteProductImages(product: Product) {
+    if (!product.images) return;
+
+    try {
+      if (product.images.front) {
+        const frontPath = path.join(this.uploadsDir, product.images.front);
+        await fs.unlink(frontPath).catch(err => {
+          this.fastify.log.error(`Failed to delete front image: ${err}`);
+        });
+      }
+      if (product.images.back) {
+        const backPath = path.join(this.uploadsDir, product.images.back);
+        await fs.unlink(backPath).catch(err => {
+          this.fastify.log.error(`Failed to delete back image: ${err}`);
+        });
+      }
+    } catch (error) {
+      this.fastify.log.error(`Failed to delete product images: ${error}`);
+    }
+  }
+
+  // Initialize storage
+  private async initializeStorage() {
+    // Ensure uploads directory exists
+    await fs.mkdir(this.uploadsDir, { recursive: true });
+    await fs.mkdir(this.staticDir, { recursive: true });
   }
 } 

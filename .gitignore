@@ -26,3 +26,7 @@ yarn-error.log*
 
 # Dependency directories
 node_modules/
+
+# Uploaded product images
+/uploads/
+uploads/
