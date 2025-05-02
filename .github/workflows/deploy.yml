@@ -71,8 +71,11 @@ jobs:
             echo "window.env = { NG_APP_API_URL: '${{ secrets.NG_APP_API_URL }}', NG_APP_WS_URL: '${{ secrets.NG_APP_WS_URL }}' };" > client/dist/assets/env.js
 
             echo "Rebuilding and restarting containers"
+            # Force remove all containers and networks
+            docker-compose down --remove-orphans
+            docker ps -a -q | xargs -r docker rm -f
+            
             # Build and start containers
-            docker-compose down
             docker-compose build --no-cache
             docker-compose up -d
 
