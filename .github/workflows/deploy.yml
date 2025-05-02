@@ -49,10 +49,10 @@ jobs:
             echo "CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}" >> server/.env
             
             echo "PGUSER=${{ secrets.PG_USER }}" >> server/.env
-            echo "PGHOST=localhost" >> server/.env
+            echo "PGHOST=postgres" >> server/.env
             echo "PGDATABASE=${{ secrets.PG_DATABASE }}" >> server/.env
             echo "PGPASSWORD=${{ secrets.PG_PASSWORD }}" >> server/.env
-            echo "PGPORT=${{ secrets.PG_PORT }}" >> server/.env
+            echo "PGPORT=5432" >> server/.env
             
             echo "CRYPTO_CLOUD_API_KEY=${{ secrets.CRYPTO_CLOUD_API_KEY }}" >> server/.env
             echo "CRYPTO_CLOUD_SHOP_ID=${{ secrets.CRYPTO_CLOUD_SHOP_ID }}" >> server/.env
