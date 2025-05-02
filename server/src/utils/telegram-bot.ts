@@ -323,10 +323,14 @@ export class TelegramBot {
     this.fastify.log.info('[parseStockInput] input:', JSON.stringify(input));
     const stock: Record<string, number> = {};
     const pairs = input.split(',').map(pair => pair.trim()).filter(Boolean);
+    this.fastify.log.info('[parseStockInput] pairs:', JSON.stringify(pairs));
 
     for (const pair of pairs) {
-      const [size, quantity] = pair.split(':').map(part => part.trim());
+      const parts = pair.split(':').map(part => part.trim());
+      this.fastify.log.info('[parseStockInput] parts:', JSON.stringify(parts));
+      const [size, quantity] = parts;
       const quantityNum = Number(quantity);
+      this.fastify.log.info('[parseStockInput] parsed values:', { size, quantity, quantityNum });
       if (!size || !quantity || isNaN(quantityNum)) {
         throw new Error('Invalid stock format');
       }
