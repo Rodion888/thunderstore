@@ -21,7 +21,12 @@ export default async function telegramRoutes(fastify: FastifyInstance, telegramB
       
       // Check if this is a text message
       if (update.message?.text && update.message?.chat?.id) {
-        await telegramBot.handleCommand(update.message.text, update.message.chat.id);
+        // Check if this is a command (starts with /)
+        if (update.message.text.startsWith('/')) {
+          await telegramBot.handleCommand(update.message.text, update.message.chat.id);
+        } else {
+          await telegramBot.handleMessage(update.message);
+        }
       }
       
       return reply.send({ status: 'ok' });
