@@ -10,6 +10,8 @@ export interface Product {
     front: string;
     back: string;
   };
+  frontImageName?: string;
+  backImageName?: string;
 }
 
 export interface CartItem {
