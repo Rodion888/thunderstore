@@ -19,10 +19,9 @@ export default async function telegramRoutes(fastify: FastifyInstance, telegramB
       fastify.log.info('Received Telegram webhook body (pretty): ' + JSON.stringify(request.body, null, 2));
       const update = request.body;
       
-      // Check if this is a text message
-      if (update.message?.text && update.message?.chat?.id) {
-        // Check if this is a command (starts with /)
-        if (update.message.text.startsWith('/')) {
+      // Check if this is a message from a chat
+      if (update.message?.chat?.id) {
+        if (update.message.text && update.message.text.startsWith('/')) {
           await telegramBot.handleCommand(update.message.text, update.message.chat.id);
         } else {
           await telegramBot.handleMessage(update.message);
