@@ -210,7 +210,7 @@ export class TelegramBot {
   
   // Handle incoming messages (not commands)
   public async handleMessage(message: any) {
-    const chatId = message.chat.id;
+    const chatId = String(message.chat.id);
     this.fastify.log.info('[handleMessage] message:', JSON.stringify(message, null, 2));
     
     // Check if we're in product creation process
@@ -228,19 +228,20 @@ export class TelegramBot {
 
   // Start product creation process
   private async startProductCreation(chatId: string) {
-    this.productCreationStates.set(chatId, {
+    const key = String(chatId);
+    this.productCreationStates.set(key, {
       step: 'name',
       data: {},
-      chatId
+      chatId: key
     });
 
     return this.sendMessage('🆕 *Creating a new product*\n\n' +
-      'Please send the product name:', chatId);
+      'Please send the product name:', key);
   }
 
   // Handle product creation steps
   private async handleProductCreation(message: any, state: ProductCreationState) {
-    const chatId = state.chatId;
+    const chatId = String(state.chatId);
     this.fastify.log.info(`[handleProductCreation] step: ${state.step}, message:`, JSON.stringify(message, null, 2));
     try {
       switch (state.step) {
@@ -659,20 +660,21 @@ export class TelegramBot {
 
   // Start product editing process
   private async startProductEditing(productId: number, chatId: string) {
+    const key = String(chatId);
     try {
       // Get existing product
       const result = await this.pool.query('SELECT * FROM products WHERE id = $1', [productId]);
       const product = result.rows[0];
       
       if (!product) {
-        return this.sendMessage(`❌ Product with ID ${productId} not found`, chatId);
+        return this.sendMessage(`❌ Product with ID ${productId} not found`, key);
       }
 
-      this.productEditingStates.set(chatId, {
+      this.productEditingStates.set(key, {
         productId,
         step: 'selecting',
         data: { ...product },
-        chatId
+        chatId: key
       });
 
       return this.sendMessage('🔄 *Editing product*\n\n' +
@@ -682,15 +684,15 @@ export class TelegramBot {
         '3️⃣ Stock\n' +
         '4️⃣ Front image\n' +
         '5️⃣ Back image\n\n' +
-        'Send the number of what you want to edit:', chatId);
+        'Send the number of what you want to edit:', key);
     } catch (error) {
-      return this.sendMessage(`❌ Error starting product edit: ${error}`, chatId);
+      return this.sendMessage(`❌ Error starting product edit: ${error}`, key);
     }
   }
 
   // Handle product editing steps
   private async handleProductEditing(message: any, state: ProductEditingState) {
-    const chatId = state.chatId;
+    const chatId = String(state.chatId);
 
     try {
       if (state.step === 'selecting') {
@@ -787,11 +789,12 @@ export class TelegramBot {
 
   // Delete product
   private async deleteProduct(productId: number, chatId: string) {
+    const key = String(chatId);
     try {
       // Check if product exists
       const result = await this.pool.query('SELECT * FROM products WHERE id = $1', [productId]);
       if (result.rows.length === 0) {
-        return this.sendMessage(`❌ Product with ID ${productId} not found`, chatId);
+        return this.sendMessage(`❌ Product with ID ${productId} not found`, key);
       }
 
       // Delete product
@@ -801,9 +804,9 @@ export class TelegramBot {
       const product = result.rows[0];
       await this.deleteProductImages(product);
       
-      return this.sendMessage('✅ Product successfully deleted!', chatId);
+      return this.sendMessage('✅ Product successfully deleted!', key);
     } catch (error) {
-      return this.sendMessage(`❌ Error deleting product: ${error}`, chatId);
+      return this.sendMessage(`❌ Error deleting product: ${error}`, key);
     }
   }
 
