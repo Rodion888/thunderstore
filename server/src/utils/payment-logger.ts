@@ -32,12 +32,17 @@ export class PaymentLogger {
   public logPaymentCreationError(orderId: number, error: any) {
     // Проверяем ответ более тщательно - есть ли там URL платежа
     if (error) {
-      // Проверка нового формата API
+      // Проверка среднего формата API (v2)
       if (error.payurl) {
         return this.logPaymentCreated(orderId, error.payurl);
       }
       
-      // Проверка старого формата API
+      // Проверка нового формата API (v3)
+      if (error.pay_url) {
+        return this.logPaymentCreated(orderId, error.pay_url);
+      }
+      
+      // Проверка старого формата API (v1)
       if (error.data && error.data.url) {
         return this.logPaymentCreated(orderId, error.data.url);
       }

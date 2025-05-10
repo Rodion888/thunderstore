@@ -49,25 +49,25 @@ export default async function paymentRoutes(fastify: FastifyInstance): Promise<v
       // Добавляем логирование формата ответа для отладки
       fastify.log.info(`CryptoCloud API response: ${JSON.stringify(result)}`);
 
-      // Проверяем структуру ответа от API - может быть либо data.url, либо payurl
+      // Проверяем структуру ответа от API - может быть разные форматы
       if (result?.data?.url) {
-        // Логируем успешное создание платежа (старый формат API)
+        // Старый формат API (v1)
         logger.logPaymentCreated(orderId, result.data.url);
         return reply.send({ paymentUrl: result.data.url });
-      } else if (result?.payurl && result?.status === 'success') {
-        // Логируем успешное создание платежа (новый формат API)
-        logger.logPaymentCreated(orderId, result.payurl);
-        return reply.send({ paymentUrl: result.payurl });
       } else if (result?.payurl) {
-        // Если есть payurl, но что-то не так с другими полями
-        fastify.log.info(`Detected payurl without expected 'success' status: ${JSON.stringify(result)}`);
+        // Средний формат API (v2)
         logger.logPaymentCreated(orderId, result.payurl);
         return reply.send({ paymentUrl: result.payurl });
+      } else if (result?.pay_url) {
+        // Новый формат API (v3)
+        fastify.log.info(`Detected new API format with pay_url: ${result.pay_url}`);
+        logger.logPaymentCreated(orderId, result.pay_url);
+        return reply.send({ paymentUrl: result.pay_url });
       }
 
-      // Логируем ошибку
+      // Логируем ошибку если не нашли URL платежа ни в одном формате
       logger.logPaymentCreationError(orderId, result);
-      return reply.status(500).send({ error: 'Failed to create invoice', details: result });
+      return reply.status(500).send({ error: 'Failed to create invoice: No payment URL found', details: result });
     } catch (error) {
       // Логируем исключение
       logger.logPaymentCreationError(request.body?.orderId || 0, error);
