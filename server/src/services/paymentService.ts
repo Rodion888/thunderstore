@@ -1,2 +1,2 @@
 // Заглушка для платежного сервиса
-export default {}; 
+export default {};

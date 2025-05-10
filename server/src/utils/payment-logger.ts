@@ -30,6 +30,20 @@ export class PaymentLogger {
   }
   
   public logPaymentCreationError(orderId: number, error: any) {
+    // Проверяем ответ более тщательно - есть ли там URL платежа
+    if (error) {
+      // Проверка нового формата API
+      if (error.payurl) {
+        return this.logPaymentCreated(orderId, error.payurl);
+      }
+      
+      // Проверка старого формата API
+      if (error.data && error.data.url) {
+        return this.logPaymentCreated(orderId, error.data.url);
+      }
+    }
+    
+    // Если дошли до сюда, это настоящая ошибка
     const message = `❌ Payment creation failed: OrderID=${orderId}, Error=${JSON.stringify(error)}`;
     this.fastify.log.error(message);
     this.sendTelegramNotification(message);

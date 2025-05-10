@@ -143,10 +143,31 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
       email
     }).subscribe({
       next: (response) => {
-        window.location.href = response.paymentUrl;
+        console.log('Payment URL received:', response.paymentUrl);
+        if (response.paymentUrl) {
+          window.location.href = response.paymentUrl;
+        } else {
+          console.error('No payment URL in response', response);
+          // Здесь можно добавить показ ошибки пользователю
+        }
       },
       error: (error) => {
         console.error('Error creating crypto payment:', error);
+        // Здесь можно добавить показ ошибки пользователю
+        
+        // Пытаемся извлечь детальную информацию об ошибке, если она есть
+        let errorMessage = 'Error processing payment';
+        
+        if (error.error && error.error.details) {
+          console.log('Payment API error details:', error.error.details);
+          
+          // Проверяем, содержится ли в ответе об ошибке payurl
+          if (error.error.details && error.error.details.payurl) {
+            console.log('Payment URL found in error details, redirecting...');
+            window.location.href = error.error.details.payurl;
+            return;
+          }
+        }
       }
     });
   }

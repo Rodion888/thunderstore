@@ -46,6 +46,9 @@ export default async function paymentRoutes(fastify: FastifyInstance): Promise<v
 
       const result = await response.json();
 
+      // Добавляем логирование формата ответа для отладки
+      fastify.log.info(`CryptoCloud API response: ${JSON.stringify(result)}`);
+
       // Проверяем структуру ответа от API - может быть либо data.url, либо payurl
       if (result?.data?.url) {
         // Логируем успешное создание платежа (старый формат API)
@@ -53,6 +56,11 @@ export default async function paymentRoutes(fastify: FastifyInstance): Promise<v
         return reply.send({ paymentUrl: result.data.url });
       } else if (result?.payurl && result?.status === 'success') {
         // Логируем успешное создание платежа (новый формат API)
+        logger.logPaymentCreated(orderId, result.payurl);
+        return reply.send({ paymentUrl: result.payurl });
+      } else if (result?.payurl) {
+        // Если есть payurl, но что-то не так с другими полями
+        fastify.log.info(`Detected payurl without expected 'success' status: ${JSON.stringify(result)}`);
         logger.logPaymentCreated(orderId, result.payurl);
         return reply.send({ paymentUrl: result.payurl });
       }

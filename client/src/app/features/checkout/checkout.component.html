@@ -37,6 +37,7 @@
             formControlName="phone"
             [label]="'phone' | translate"
             type="tel"
+            [isPhone]="true"
             [placeholder]="'phone-placeholder' | translate"
             [errorMessage]="getErrorMessage('phone')">
           </app-custom-field>

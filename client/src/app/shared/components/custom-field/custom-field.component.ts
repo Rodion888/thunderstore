@@ -21,6 +21,7 @@ export class CustomFieldComponent implements ControlValueAccessor {
   @Input() label: string = '';
   @Input() errorMessage: string | null = null;
   @Input() type: string = 'text';
+  @Input() isPhone: boolean = false;
 
   value: string = '';
 
@@ -43,7 +44,7 @@ export class CustomFieldComponent implements ControlValueAccessor {
     const input = event.target as HTMLInputElement;
     let inputValue = input.value;
     
-    if (this.label.includes('Телефон')) {
+    if (this.isPhone) {
       inputValue = this.formatPhoneNumber(inputValue);
       input.value = inputValue;
     }
@@ -53,7 +54,7 @@ export class CustomFieldComponent implements ControlValueAccessor {
   }
 
   handleBlur(): void {
-    if (this.label.includes('Телефон') && this.value && !this.value.startsWith('+7')) {
+    if (this.isPhone && this.value && !this.value.startsWith('+7')) {
       const formattedNumber = this.formatPhoneNumber(this.value);
       this.value = formattedNumber;
       this.onChange(this.value);
