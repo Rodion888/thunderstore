@@ -37,4 +37,4 @@ export default async function orderRoutes(fastify: FastifyInstance): Promise<voi
       reply.status(500).send({ message: 'Failed to create order' });
     }
   });
-} 
+}

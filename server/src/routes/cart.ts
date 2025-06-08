@@ -66,4 +66,4 @@ export default async function cartRoutes(fastify: FastifyInstance): Promise<void
     await clearCart(sessionId);
     return reply.send({ message: 'The cart has been cleared' });
   });
-} 
+}

@@ -1,14 +1,10 @@
-<div class="success-container">
-  <div class="success-content">
-    <div class="success-icon">
-      <span class="check-mark">✓</span>
+<div class="page">
+  <div class="success-card">
+    <div class="dots-bg"></div>
+    <div class="success-card-text text-default">
+      <svg width="1.5em" height="1.5em" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="currentColor" class="love-icon"><path d="M22 8.862a5.95 5.95 0 01-1.654 4.13c-2.441 2.531-4.809 5.17-7.34 7.608-.581.55-1.502.53-2.057-.045l-7.295-7.562c-2.205-2.286-2.205-5.976 0-8.261a5.58 5.58 0 018.08 0l.266.274.265-.274A5.612 5.612 0 0116.305 3c1.52 0 2.973.624 4.04 1.732A5.95 5.95 0 0122 8.862z" stroke="currentColor" stroke-linejoin="round"></path></svg>
+      {{ 'order-success-message' | translate }}
     </div>
-    
-    <h1>Оплата успешно завершена!</h1>
-    
-    <p *ngIf="orderId">Номер заказа: <strong>{{ orderId }}</strong></p>
-    <p>Спасибо за покупку. Мы отправим вам уведомление о статусе заказа.</p>
-    
-    <button class="home-button" (click)="goToHome()">Вернуться на главную</button>
+    <app-button type="btn" [text]="'back-to-home' | translate" (buttonClick)="goToHome()"></app-button>
   </div>
 </div>

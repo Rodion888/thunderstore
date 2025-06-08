@@ -24,7 +24,7 @@ import { TranslatePipe } from "../../shared/pipes/translate.pipe";
     BackgroundVideoComponent,
     AppCurrencyPipe,
     TranslatePipe
-],
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductDetailComponent implements OnInit {

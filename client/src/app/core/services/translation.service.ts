@@ -63,7 +63,9 @@ export class TranslationService {
       'Это поле обязательно': 'Это поле обязательно',
       'Введите корректный email': 'Введите корректный email',
       'Неверный формат': 'Неверный формат',
-      'Некорректное значение': 'Некорректное значение'
+      'Некорректное значение': 'Некорректное значение',
+      'order-success-message': 'Ваш заказ успешно оформлен, спасибо!',
+      'back-to-home': 'Вернуться на главную'
     },
     EN: {
       'price': 'Price',
@@ -117,7 +119,9 @@ export class TranslationService {
       'Это поле обязательно': 'This field is required',
       'Введите корректный email': 'Enter a valid email',
       'Неверный формат': 'Invalid format',
-      'Некорректное значение': 'Invalid value'
+      'Некорректное значение': 'Invalid value',
+      'order-success-message': 'Your order has been placed successfully, thank you!',
+      'back-to-home': 'Back to home'
     }
   };
   

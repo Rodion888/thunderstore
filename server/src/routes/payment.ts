@@ -6,14 +6,12 @@ import fetch from 'node-fetch';
 export default async function paymentRoutes(fastify: FastifyInstance): Promise<void> {
   const logger = new PaymentLogger(fastify);
   
-  // Создание инвойса для оплаты
   fastify.post('/payment/create', async (request: FastifyRequest<{
     Body: { orderId: number; amount: number; email: string; }
   }>, reply: FastifyReply) => {
     try {
       const { orderId, amount, email } = request.body;
       
-      // Логируем начало создания платежа
       logger.logPaymentCreation(orderId, amount, email);
       
       const API_KEY = process.env.CRYPTO_CLOUD_API_KEY;
@@ -46,58 +44,32 @@ export default async function paymentRoutes(fastify: FastifyInstance): Promise<v
 
       const result = await response.json();
 
-      // Добавляем логирование формата ответа для отладки
-      fastify.log.info(`CryptoCloud API response: ${JSON.stringify(result)}`);
-
-      // Проверяем структуру ответа от API - может быть разные форматы
-      if (result?.data?.url) {
-        // Старый формат API (v1)
-        logger.logPaymentCreated(orderId, result.data.url);
-        return reply.send({ paymentUrl: result.data.url });
-      } else if (result?.payurl) {
-        // Средний формат API (v2)
+      if (result?.status === 'success' && result?.payurl) {
         logger.logPaymentCreated(orderId, result.payurl);
         return reply.send({ paymentUrl: result.payurl });
-      } else if (result?.pay_url) {
-        // Новый формат API (v3)
-        fastify.log.info(`Detected new API format with pay_url: ${result.pay_url}`);
-        logger.logPaymentCreated(orderId, result.pay_url);
-        return reply.send({ paymentUrl: result.pay_url });
       }
 
-      // Логируем ошибку если не нашли URL платежа ни в одном формате
       logger.logPaymentCreationError(orderId, result);
-      return reply.status(500).send({ error: 'Failed to create invoice: No payment URL found', details: result });
+      return reply.status(500).send({ error: 'Failed to create invoice', details: result });
     } catch (error) {
-      // Логируем исключение
       logger.logPaymentCreationError(request.body?.orderId || 0, error);
       return reply.status(500).send({ error: 'Internal server error' });
     }
   });
 
-  // Webhook для получения уведомлений о статусе платежа
   fastify.post('/payment/webhook', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const data = request.body as any;
       
-      // Логируем получение вебхука
       logger.logWebhookReceived(data);
-
-      if (data.status === 'paid') {
-        // Логируем успешную оплату
-        logger.logPaymentSuccess(data.order_id);
-        
-        // Обновляем статус заказа в базе данных
+      
+      if (data.status === 'success') {
+        logger.logPaymentSuccess(data.order_id, data);
         try {
           await fastify.pool.query(
             `UPDATE orders SET status = 'paid' WHERE id = $1`,
             [data.order_id]
           );
-          
-          // Отправляем более подробное уведомление в Telegram
-          if (fastify.telegramBot) {
-            fastify.telegramBot.sendMessage(`💵 *Оплата успешно поступила*\n\nЗаказ №${data.order_id} оплачен.\nСумма: ${data.amount} ${data.currency}\nИспользуйте /order ${data.order_id} для подробностей.`);
-          }
         } catch (dbError) {
           fastify.log.error(`Error updating order status: ${dbError}`);
         }
@@ -108,10 +80,5 @@ export default async function paymentRoutes(fastify: FastifyInstance): Promise<v
       fastify.log.error('Error processing webhook:', error);
       return reply.status(500).send({ error: 'Internal server error' });
     }
-  });
-  
-  // Добавляем эндпоинт для проверки здоровья сервиса
-  fastify.get('/health', async (request, reply) => {
-    return reply.send({ status: 'ok' });
   });
 }

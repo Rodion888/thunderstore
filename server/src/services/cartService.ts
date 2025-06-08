@@ -64,4 +64,4 @@ export async function removeFromCart(sessionId: string, productId: number, size:
 export async function clearCart(sessionId: string): Promise<void> {
   carts.set(sessionId, []);
   broadcastCartUpdate(sessionId);
-} 
+}

@@ -40,4 +40,5 @@ async function getProductById(id: string): Promise<Product | undefined> {
   }
 }
 
-export default { getProducts, getProductById }; 
+export default { getProducts, getProductById };
+ 

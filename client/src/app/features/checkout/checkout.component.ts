@@ -13,6 +13,7 @@ import { Subject } from 'rxjs';
 import { ScrollService } from '../../core/services/scroll.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { TranslationService } from '../../core/services/translation.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-checkout',
@@ -36,6 +37,7 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private scrollService = inject(ScrollService);
   private translationService = inject(TranslationService);
+  private notificationService = inject(NotificationService);
 
   @ViewChild('checkoutForm') checkoutFormRef!: ElementRef;
   @ViewChildren('section0, section1, section2') sections!: QueryList<ElementRef>;
@@ -74,12 +76,7 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
     const container = this.checkoutFormRef.nativeElement;
     const sectionsArray = this.sections.toArray();
     
-    this.scrollService.setupScrollListener(
-      container,
-      sectionsArray,
-      (index: number) => this.updateActiveTab(index),
-      this.cdr
-    );
+    this.scrollService.setupScrollListener(container, sectionsArray, (index: number) => this.updateActiveTab(index), this.cdr);
   }
   
   private updateActiveTab(index: number): void {
@@ -119,14 +116,12 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
       
       this.orderService.createOrder(orderData).subscribe({
         next: (response: OrderResponse) => {
-          console.log('Order successfully created:', response);
-          
           if (orderData.paymentMethod === PaymentMethod.CRYPTO) {
             this.processCryptoPayment(response.orderId, orderData.email);
           }
         },
         error: (error) => {
-          console.error('Error creating order:', error);
+          this.notificationService.error(error.error.message);
         }
       });
     } else {
@@ -143,38 +138,14 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
       email
     }).subscribe({
       next: (response) => {
-        console.log('Payment URL received:', response.paymentUrl);
         if (response.paymentUrl) {
           window.location.href = response.paymentUrl;
         } else {
-          console.error('No payment URL in response', response);
-          // Здесь можно добавить показ ошибки пользователю
+          this.notificationService.error('Не удалось получить URL для оплаты');
         }
       },
       error: (error) => {
-        console.error('Error creating crypto payment:', error);
-        
-        // Пытаемся извлечь детальную информацию об ошибке и искать URL платежа
-        if (error.error && error.error.details) {
-          console.log('Payment API error details:', error.error.details);
-          
-          const details = error.error.details;
-          
-          // Проверяем все возможные форматы URL платежа
-          if (details.payurl) {
-            console.log('Payment URL (payurl) found in error details, redirecting...');
-            window.location.href = details.payurl;
-            return;
-          } else if (details.pay_url) {
-            console.log('Payment URL (pay_url) found in error details, redirecting...');
-            window.location.href = details.pay_url;
-            return;
-          } else if (details.data && details.data.url) {
-            console.log('Payment URL (data.url) found in error details, redirecting...');
-            window.location.href = details.data.url;
-            return;
-          }
-        }
+        this.notificationService.error(error.error.message);
       }
     });
   }

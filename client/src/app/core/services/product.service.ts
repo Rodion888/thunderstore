@@ -22,11 +22,10 @@ export class ProductService {
   }
 
   private fetchTotalProducts() {
-    this.productApi.getTotal()
-      .subscribe(response => {
-        this.totalProducts = response.total;
-        this.loadProducts();
-      });
+    this.productApi.getTotal().subscribe(response => {
+      this.totalProducts = response.total;
+      this.loadProducts();
+    });
   }
 
   private loadProducts() {
@@ -68,4 +67,3 @@ export class ProductService {
     return this.productApi.getProductById(id);
   }
 }
-

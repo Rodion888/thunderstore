@@ -13,7 +13,6 @@
   pointer-events: none;
   opacity: 0;
   
-  /* Скрыть кнопку воспроизведения в Safari */
   &::-webkit-media-controls {
     display: none !important;
   }

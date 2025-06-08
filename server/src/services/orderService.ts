@@ -92,4 +92,4 @@ async function validateCartItems(cartItems: CartItem[]): Promise<{ isValid: bool
   }
 }
 
-export default { createOrder, decreaseStock, validateCartItems }; 
+export default { createOrder, decreaseStock, validateCartItems };

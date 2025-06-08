@@ -1,29 +1,19 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { BackgroundService } from '../../core/services/background.service';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ButtonComponent } from '../../shared/components/button/button.component';
+import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
 @Component({
   selector: 'app-success',
   templateUrl: './success.component.html',
   styleUrls: ['./success.component.scss'],
-  imports: [CommonModule],
+  imports: [CommonModule, ButtonComponent, TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SuccessComponent implements OnInit {
-  orderId: string | null = null;
-  
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private backgroundService: BackgroundService
-  ) {}
-  
-  ngOnInit() {
-    this.orderId = this.route.snapshot.queryParamMap.get('orderId');
-    
-    this.backgroundService.setVideo('assets/videos/bg.mp4');
-  }
-  
+export class SuccessComponent {
+  private router = inject(Router);
+
   goToHome() {
     this.router.navigate(['/']);
   }

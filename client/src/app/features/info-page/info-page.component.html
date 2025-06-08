@@ -1,91 +1,38 @@
-<div class="background-container">
-  <div class="info-container">
-    <div id="contact-us">
-      <div class="title-container">
-        <span class="title">{{ 'contact-us' | translate }}</span>
-        <svg class="title-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-        </svg>
+<div class="info-layout">
+  <div class="info-main" #mainContent>
+    <div id="contact-us" class="info-section" #sectionRef>
+      <div class="title section-title-hover">
+        Contact Us
+        <ng-container *ngTemplateOutlet="linkIcon"></ng-container>
       </div>
-      
-      <span class="text-sm color-tertiary">
-        ThunderStore<br>
-        Email: info[at]thunderstore.com<br>
-        Phone: +7 999 123-45-67<br>
-        Address: Thunderstore HQ, 123 Fashion Street, Krasnodar, Russia
-      </span>
-      
-      <span class="text-sm color-tertiary">
-        Часы работы<br>
-        Пн-Пт: 10:00 - 19:00<br>
-        Сб: 11:00 - 17:00<br>
-        Вс: Закрыто
-      </span>
-      
-      <span class="text-sm color-tertiary">
-        Социальные сети<br>
-        Instagram: thunderstore_official<br>
-        Telegram: thunderstore<br>
-        VK: vk.com/thunderstore
-      </span>
+      <div class="text-default">...</div>
     </div>
-    
-    <div id="terms">
-      <div class="title-container">
-        <span class="title">{{ 'terms' | translate }}</span>
-        <svg class="title-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-        </svg>
+    <div id="terms" class="info-section" #sectionRef>
+      <div class="title section-title-hover">
+        Terms
+        <ng-container *ngTemplateOutlet="linkIcon"></ng-container>
       </div>
-      
-      <span class="text-sm color-tertiary">
-        Условия использования<br>
-        Добро пожаловать на сайт ThunderStore. Используя наш сайт, вы принимаете эти условия использования. Пожалуйста, прочитайте их внимательно.
-      </span>
-      
-      <span class="text-sm color-tertiary">
-        Информация о ценах<br>
-        Все цены указаны в рублях и включают НДС. Мы оставляем за собой право изменять цены в любое время без предварительного уведомления.
-      </span>
-      
-      <span class="text-sm color-tertiary">
-        Доставка<br>
-        Мы стремимся обрабатывать и доставлять все заказы в кратчайшие сроки. Сроки доставки могут варьироваться в зависимости от вашего местоположения и выбранного способа доставки.
-      </span>
-      
-      <span class="text-sm color-tertiary">
-        Возврат и обмен<br>
-        Вы можете вернуть товар в течение 14 дней с момента получения. Товар должен быть в оригинальной упаковке, не иметь следов использования и с сохраненными бирками.
-      </span>
+      <div class="text-default">...</div>
     </div>
-    
-    <div id="privacy">
-      <div class="title-container">
-        <span class="title">{{ 'privacy' | translate }}</span>
-        <svg class="title-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
-        </svg>
+    <div id="privacy" class="info-section" #sectionRef>
+      <div class="title section-title-hover">
+        Privacy
+        <ng-container *ngTemplateOutlet="linkIcon"></ng-container>
       </div>
-      
-      <span class="text-sm color-tertiary">
-        Политика конфиденциальности<br>
-        ThunderStore ценит конфиденциальность своих клиентов и строго соблюдает законодательство о защите данных.
-      </span>
-      
-      <span class="text-sm color-tertiary">
-        Собираемая информация<br>
-        Мы собираем информацию, которую вы предоставляете при оформлении заказа, включая ваше имя, адрес, адрес электронной почты и номер телефона. Мы также собираем информацию о вашей активности на сайте.
-      </span>
-      
-      <span class="text-sm color-tertiary">
-        Использование информации<br>
-        Мы используем собранную информацию для обработки ваших заказов, общения с вами и улучшения нашего сайта и сервиса. Мы не продаем и не передаем вашу личную информацию третьим лицам.
-      </span>
-      
-      <span class="text-sm color-tertiary">
-        Cookies<br>
-        Наш сайт использует cookies для улучшения опыта пользователей. Вы можете отключить cookies в настройках вашего браузера, но это может повлиять на функциональность сайта.
-      </span>
+      <div class="text-default">...</div>
     </div>
   </div>
+  <nav class="info-nav">
+    <div class="title">Terms of Service</div>
+    <div class="info-date">Last update: AUG 08, 2025</div>
+    <div *ngFor="let section of sections; let i = index" [class.active]="activeSectionIndex === i"
+        class="nav-item color-default"
+        (click)="scrollToSection(section.id, $event)">
+      <div class="nav-number">{{i + 1}}.</div> {{section.title}}
+    </div>
+  </nav>
 </div>
+
+<ng-template #linkIcon>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 19 19"><g stroke="currentColor" stroke-linecap="square" stroke-miterlimit="10" stroke-width="1.188" clip-path="url(#link_inline_svg)"><path d="M9.502 12.258A4.157 4.157 0 0 1 7.78 5.344l2.939-2.939a4.157 4.157 0 1 1 5.878 5.878l-1.81 1.811"></path><path d="M9.5 6.742a4.156 4.156 0 0 1 1.722 6.914l-2.939 2.939a4.156 4.156 0 1 1-5.878-5.878l1.81-1.811"></path></g><defs><clipPath id="link_inline_svg"><path fill="#fff" d="M0 0h19v19H0z"></path></clipPath></defs></svg>
+</ng-template>

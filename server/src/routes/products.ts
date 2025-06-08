@@ -40,4 +40,4 @@ export default async function productRoutes(fastify: FastifyInstance): Promise<v
       return reply.status(500).send({ message: 'Server error' });
     }
   });
-} 
+}

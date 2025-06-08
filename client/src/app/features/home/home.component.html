@@ -1,7 +1,7 @@
 <app-background-video></app-background-video>
 
 <div class="page-content">
-  <div class="cards-list" [style.width]="(products() || []).length === 0 ? '100%' : 'auto'" (scroll)="onScroll($event)">
+  <div class="cards-list" (scroll)="onScroll($event)">
     <ng-container *ngFor="let product of products()">
       <app-card [product]="product"></app-card>
     </ng-container>

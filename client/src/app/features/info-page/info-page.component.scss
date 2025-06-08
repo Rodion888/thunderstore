@@ -1,49 +1,102 @@
-@use '../../../assets/styles/variables';
+@use '../../../assets/styles/variables' as *;
 
-.background-container {
-  height: 100%;
-  background-color: variables.$color-background-dark;
-  overflow: hidden;
-  position: relative;
+$color-white: rgb(255, 255, 255);
+
+.info-layout {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  margin: 8rem 2.6rem 2rem 2.6rem;
 }
 
-.info-container {
-  position: relative;
-  height: 76%;
-  width: 78%;
-  display: flex;
-  flex-direction: column;
-  padding: 2rem;
-  margin-top: 6rem;
+.info-main {
+  max-height: calc(100vh - 12rem);
   overflow-y: auto;
-  overflow-x: hidden;
-  border-radius: 12px;
-  z-index: 100;
-  background-color: rgba(20, 20, 20, 0.2);
-  border: 2px solid rgba(30, 30, 30, 0.4);
+  flex-basis: 70%;
 }
 
-.info-container::-webkit-scrollbar {
+.info-main::-webkit-scrollbar {
   display: none;
 }
 
-#contact-us, #terms, #privacy {
-  margin-bottom: 1rem;
-  display: flex;
-  flex-direction: column;
+.info-title {
+  font-size: 2.25rem;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: $color-white;
+  margin-bottom: 0.5rem;
 }
 
-.title-container {
+.info-date {
+  color: $color-text-tertiary;
+  font-size: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.info-section {
+  margin-bottom: 1rem;
+}
+
+.section-title-hover {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  
+  &:hover {
+    color: $color-text-accent;
+    
+    svg {
+      opacity: 1;
+    }
+  }
+  
+  svg {
+    width: 1rem;
+    height: 1rem;
+    color: $color-text-accent;
+    opacity: 0;
+  }
 }
 
-.title-icon {
-  fill: variables.$color-text-accent;
-  width: 1.5rem;
-  height: 1.5rem;
-  margin-left: 0.6rem;
+.info-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex-basis: 30%;
+}
+
+.nav-item {
+  font-size: 1rem;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  cursor: pointer;
+}
+
+.nav-item .nav-number {
+  margin-right: 0.5em;
+}
+
+.nav-item.active {
+  color: $color-text-accent;
+  font-weight: 500;
+}
+
+.nav-item.active .nav-number {
+  color: $color-text-accent;
+}
+
+.nav-item:not(.active):hover {
+  color: $color-white;
+}
+
+@media (max-width: 548px) {
+  .info-nav {
+    display: none;
+  }
+
+  .info-main {
+    flex-basis: 100%;
+  }
 }
