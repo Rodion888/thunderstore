@@ -25,7 +25,7 @@ export interface SelectOption {
 export class CustomSelectComponent implements ControlValueAccessor {
   @Input() label: string = '';
   @Input() options: SelectOption[] = [];
-  @Input() placeholder: string = 'Выберите размер';
+  @Input() placeholder: string = '';
 
   value: string = '';
 

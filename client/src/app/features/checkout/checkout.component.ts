@@ -13,7 +13,6 @@ import { Subject } from 'rxjs';
 import { ScrollService } from '../../core/services/scroll.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { TranslationService } from '../../core/services/translation.service';
-import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-checkout',
@@ -37,7 +36,6 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private scrollService = inject(ScrollService);
   private translationService = inject(TranslationService);
-  private notificationService = inject(NotificationService);
 
   @ViewChild('checkoutForm') checkoutFormRef!: ElementRef;
   @ViewChildren('section0, section1, section2') sections!: QueryList<ElementRef>;
@@ -121,7 +119,7 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
           }
         },
         error: (error) => {
-          this.notificationService.error(error.error.message);
+          console.log(error);
         }
       });
     } else {
@@ -141,11 +139,11 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
         if (response.paymentUrl) {
           window.location.href = response.paymentUrl;
         } else {
-          this.notificationService.error('Не удалось получить URL для оплаты');
+          console.log(response);
         }
       },
       error: (error) => {
-        this.notificationService.error(error.error.message);
+        console.log(error);
       }
     });
   }
