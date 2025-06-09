@@ -115,8 +115,7 @@ export class TelegramBot {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: chatId,
-          text: message,
-          parse_mode: 'Markdown'
+          text: message
         })
       });
       

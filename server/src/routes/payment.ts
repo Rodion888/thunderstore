@@ -36,17 +36,18 @@ export default async function paymentRoutes(fastify: FastifyInstance): Promise<v
           currency: 'USD',
           order_id: String(orderId),
           email: email,
-          webhook_url: `${baseUrl}/payment/webhook`,
-          success_url: `${baseUrl}/success?orderId=${orderId}`,
-          fail_url: `${baseUrl}/checkout`,
+          webhook_url: `${baseUrl}/api/payment/webhook`,
+          success_url: `${process.env.CORS_ORIGIN || 'http://localhost:4200'}/success?orderId=${orderId}`,
+          fail_url: `${process.env.CORS_ORIGIN || 'http://localhost:4200'}/checkout`,
         }),
       });
 
       const result = await response.json();
 
-      if (result?.status === 'success' && result?.payurl) {
-        logger.logPaymentCreated(orderId, result.payurl);
-        return reply.send({ paymentUrl: result.payurl });
+      if (result?.status === 'success' && (result?.pay_url || result?.payurl)) {
+        const paymentUrl = result.pay_url || result.payurl;
+        logger.logPaymentCreated(orderId, paymentUrl);
+        return reply.send({ paymentUrl });
       }
 
       logger.logPaymentCreationError(orderId, result);
