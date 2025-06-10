@@ -59,8 +59,8 @@ export class TelegramBot {
     
     const command = text.toLowerCase();
     
-    switch (command) {
-      case '/start':
+      switch (command) {
+        case '/start':
         return this.sendMessage('THUNDERSTORE_BOT\n\nAvailable commands:\n/status - System status\n/chatid - Get chat ID', chatId);
       
       case '/chatid':
@@ -83,7 +83,7 @@ export class TelegramBot {
       Memory: ${Math.round(memory.heapUsed / 1024 / 1024)}MB / ${Math.round(memory.heapTotal / 1024 / 1024)}MB
       Node: ${process.version}
       Environment: ${process.env.NODE_ENV || 'development'}
-    `;
+`;
     
     return this.sendMessage(message, chatId);
   }
