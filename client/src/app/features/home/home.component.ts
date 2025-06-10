@@ -5,8 +5,6 @@ import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
 import { CardComponent } from '../../shared/components/card/card.component';
 import { Currency, CurrencyService } from '../../core/services/currency.service';
-import { BackgroundVideoComponent } from '../../shared/components/background-video/background-video.component';
-import { BackgroundService } from '../../core/services/background.service';
 import { FormsModule } from '@angular/forms';
 import { SelectOption, CustomSelectComponent } from '../../shared/components/custom-select/custom-select.component';
 import { TranslationService, Language } from '../../core/services/translation.service';
@@ -17,13 +15,19 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
-  imports: [CommonModule, RouterModule, FormsModule, CardComponent, BackgroundVideoComponent, CustomSelectComponent, TranslatePipe],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    CardComponent,
+    CustomSelectComponent,
+    TranslatePipe
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent {
   private productService = inject(ProductService);
   private cartService = inject(CartService);
-  private backgroundService = inject(BackgroundService);
   private cdr = inject(ChangeDetectorRef);
 
   public currencyService = inject(CurrencyService);
@@ -40,13 +44,9 @@ export class HomeComponent {
   ];
   
   languageOptions: SelectOption[] = [
-    { label: '🇷🇺 RU', value: 'RU' },
-    { label: '🇬🇧 EN', value: 'EN' }
+    { label: 'RU', value: 'RU' },
+    { label: 'EN', value: 'EN' }
   ];
-
-  constructor() {
-    this.backgroundService.setVideo('assets/videos/bghome.mp4?version=1');
-  }
 
   onCurrencyChange(currency: Currency): void {
     this.currencyService.setCurrency(currency);
