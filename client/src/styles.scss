@@ -10,7 +10,6 @@ html, body {
   letter-spacing: -.01em;
   font-family: "Titillium Web", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
   transition: background-color 0.5s ease-in-out;
-  /* Enable pull-to-refresh on mobile */
   overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -20,14 +19,11 @@ html, body {
   font-family: "Titillium Web", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
 }
 
-/* Ensure pull-to-refresh works on mobile */
 body {
-  /* Prevent bounce scrolling on iOS while allowing pull-to-refresh */
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: auto;
 }
 
-/* Prevent default iOS pull-to-refresh on specific containers if needed */
 .no-pull-refresh {
   overscroll-behavior-y: none;
   -webkit-overflow-scrolling: auto;
