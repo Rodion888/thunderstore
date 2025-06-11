@@ -1,4 +1,4 @@
-import { Component, ElementRef, Renderer2, ViewChild, OnInit, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ElementRef, Renderer2, ViewChild, inject, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
 import { BackgroundService } from '../../../core/services/background.service';
 import { CommonModule } from '@angular/common';
 
@@ -9,28 +9,31 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class BackgroundVideoComponent implements OnInit {
+export class BackgroundVideoComponent implements AfterViewInit {
   private renderer = inject(Renderer2);
   private backgroundService = inject(BackgroundService);
-  private cd = inject(ChangeDetectorRef);
 
   @ViewChild('videoElement', { static: false }) videoElement?: ElementRef<HTMLVideoElement>;
 
-  videoSrc: string | null = null;
+  get videoSrc(): string | null {
+    return this.backgroundService.getVideo();
+  }
 
-  ngOnInit(): void {
-    this.backgroundService.getVideo().subscribe((src) => {
-      if (src) {
-        this.videoSrc = src;
-        this.cd.detectChanges();
-        
-        setTimeout(() => {
-          if (this.videoElement) {
-            this.renderer.addClass(this.videoElement.nativeElement, 'visible');
-            this.renderer.addClass(document.body, 'video-loaded');
-          }
-        });
-      }
+  ngAfterViewInit(): void {
+    const videoSrc = this.backgroundService.getVideo();
+    if (videoSrc && this.videoElement) {
+      this.setupVideo();
+    }
+  }
+
+  private setupVideo(): void {
+    if (!this.videoElement) return;
+
+    const videoEl = this.videoElement.nativeElement;
+    
+    videoEl.addEventListener('loadeddata', () => {
+      this.renderer.addClass(videoEl, 'visible');
+      this.renderer.addClass(document.body, 'video-loaded');
     });
   }
 }

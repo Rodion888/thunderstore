@@ -25,7 +25,7 @@
     <div class="actions">
       <app-custom-select
         [label]="'t-shirt-size' | translate"
-        [options]="getAvailableSizes()"
+        [options]="availableSizes"
         [value]="selectedSize"
         [placeholder]="'select-size' | translate"
         (valueChange)="onSizeChange($event)">

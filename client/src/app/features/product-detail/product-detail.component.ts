@@ -35,7 +35,6 @@ export class ProductDetailComponent implements OnInit {
   private backgroundService = inject(BackgroundService);
 
   product: Product | null = null;
-  productId: number | null = null;
   selectedSize: string = '';
   currentImageIndex: number = 0;
   images: string[] = [];
@@ -59,24 +58,42 @@ export class ProductDetailComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
-      if (Number(params.get('id'))) {
-        this.productId = Number(params.get('id'));
-      }
+      this.loadProduct(Number(params.get('id')));
     });
+  }
 
-    if (this.productId) {
-      this.productService.getProductById(this.productId).subscribe({
-        next: (product) => {
+  private loadProduct(id: number): void {
+    this.productService.getProductById(id).subscribe({
+      next: (product) => {
+        if (product) {
           this.product = product;
-          if (this.product) {
-            this.images = [this.product.images.front, this.product.images.back];
-            this.currentImage = this.images[this.currentImageIndex];
-            this.availableSizes = this.generateAvailableSizes();
-            this.detectCurrentAvailableSize();
-          }
+          this.setupImages();
+          this.setupSizes();
           this.cdr.detectChanges();
-        },
-      });
+        }
+      },
+    });
+  }
+
+  private setupImages(): void {
+    if (!this.product) return;
+    this.images = [this.product.images.front, this.product.images.back];
+    this.currentImage = this.images[0];
+  }
+
+  private setupSizes(): void {
+    if (!this.product) return;
+    
+    this.availableSizes = Object.entries(this.product.stock)
+      .filter(([_, count]) => count > 0)
+      .map(([size]) => ({
+        label: size,
+        value: size,
+        disabled: false,
+      }));
+
+    if (this.availableSizes.length > 0) {
+      this.selectedSize = this.availableSizes[0].value;
     }
   }
 
@@ -88,44 +105,18 @@ export class ProductDetailComponent implements OnInit {
     this.fullscreenImage = null;
   }
 
-  generateAvailableSizes(): SelectOption[] {
-    if (!this.product) return [];
-  
-    return Object.entries(this.product.stock).map(([size, count]) => ({
-      label: size,
-      value: size,
-      disabled: count === 0,
-    }));
-  }
-
-  getAvailableSizes(): SelectOption[] {
-    return this.availableSizes;
-  }
-
   getAvailableSizesText(): string {
-    if (!this.product) return '';
-  
-    return Object.entries(this.product.stock)
-      .filter(([_, count]) => count > 0)
-      .map(([size]) => size)
-      .join(', ');
+    return this.availableSizes.map(size => size.label).join(', ');
   }
 
-  addToCart() {
-    if (!this.product || !this.selectedSize) return;
-    this.cartService.addToCart(this.product, this.selectedSize);
+  addToCart(): void {
+    if (this.product && this.selectedSize) {
+      this.cartService.addToCart(this.product, this.selectedSize);
+    }
   }
 
   onSizeChange(size: string): void {
     this.selectedSize = size;
-    this.cdr.markForCheck();
-  }
-
-  private detectCurrentAvailableSize() {
-    const availableSizes = this.availableSizes.filter(size => !size.disabled);
-    if (availableSizes.length > 0) {
-      this.selectedSize = availableSizes[0].value;
-    }
   }
 }
 
