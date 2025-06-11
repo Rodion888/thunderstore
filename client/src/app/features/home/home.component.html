@@ -1,9 +1,7 @@
-<div class="page-content">
-  <div class="cards-list" (scroll)="onScroll($event)">
-    <ng-container *ngFor="let product of products()">
-      <app-card [product]="product"></app-card>
-    </ng-container>
-  </div>
+<div class="cards-list" (scroll)="onScroll($event)">
+  <ng-container *ngFor="let product of products()">
+    <app-card [product]="product"></app-card>
+  </ng-container>
 </div>
 
 <div class="footer text-default">

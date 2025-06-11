@@ -20,21 +20,12 @@
   object-fit: contain;
 }
 
-@media (max-width: 768px) {
-  .card-container {
-    min-width: 10rem;
-  }
-
-  .card-container img {
-    max-height: 8rem;
-  }
-}
-
 .product-info {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-bottom: 0.8rem;
 
   &--name {
     white-space: nowrap;
@@ -42,5 +33,6 @@
     text-overflow: ellipsis;
     max-width: 200px;
     flex: 1;
+    font-weight: 500;
   }
 }
