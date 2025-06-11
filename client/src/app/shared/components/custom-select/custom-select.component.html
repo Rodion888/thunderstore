@@ -1,7 +1,7 @@
 <div class="select-container">
   <label *ngIf="label" class="select-label">{{ label }}</label>
-  <select class="select" [(ngModel)]="value" (change)="handleSelect($event)" (blur)="handleBlur()">
-    <option [value]="" disabled selected hidden>{{ placeholder }}</option>
+  <select class="select" [value]="value" (change)="onSelectionChange($event)">
+    <option value="" disabled hidden>{{ placeholder }}</option>
     <option *ngFor="let option of options" [value]="option.value" [disabled]="option.disabled">
       {{ option.label }}
     </option>

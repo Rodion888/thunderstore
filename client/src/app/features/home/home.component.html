@@ -16,16 +16,16 @@
     <app-custom-select
       class="l-c-select"
       [options]="currencyOptions"
-      [ngModel]="currencyService.currency()"
+      [value]="currencyService.currency()"
       [placeholder]="'select-currency' | translate"
-      (ngModelChange)="onCurrencyChange($event)">
+      (valueChange)="onCurrencyChange($event)">
     </app-custom-select>
     <app-custom-select
       class="l-c-select"
       [options]="languageOptions" 
-      [ngModel]="translationService.currentLang()"
+      [value]="translationService.currentLang()"
       [placeholder]="'select-language' | translate"
-      (ngModelChange)="onLanguageChange($event)">
+      (valueChange)="onLanguageChange($event)">
     </app-custom-select>
   </div>
 </div>

@@ -41,6 +41,7 @@ export class ProductDetailComponent implements OnInit {
   images: string[] = [];
   currentImage: string = '';
   fullscreenImage: string | null = null;
+  availableSizes: SelectOption[] = [];
 
   constructor() {
     this.backgroundService.setVideo('assets/videos/bg.mp4');
@@ -70,6 +71,7 @@ export class ProductDetailComponent implements OnInit {
           if (this.product) {
             this.images = [this.product.images.front, this.product.images.back];
             this.currentImage = this.images[this.currentImageIndex];
+            this.availableSizes = this.generateAvailableSizes();
             this.detectCurrentAvailableSize();
           }
           this.cdr.detectChanges();
@@ -86,7 +88,7 @@ export class ProductDetailComponent implements OnInit {
     this.fullscreenImage = null;
   }
 
-  getAvailableSizes(): SelectOption[] {
+  generateAvailableSizes(): SelectOption[] {
     if (!this.product) return [];
   
     return Object.entries(this.product.stock).map(([size, count]) => ({
@@ -94,6 +96,10 @@ export class ProductDetailComponent implements OnInit {
       value: size,
       disabled: count === 0,
     }));
+  }
+
+  getAvailableSizes(): SelectOption[] {
+    return this.availableSizes;
   }
 
   getAvailableSizesText(): string {
@@ -110,8 +116,13 @@ export class ProductDetailComponent implements OnInit {
     this.cartService.addToCart(this.product, this.selectedSize);
   }
 
+  onSizeChange(size: string): void {
+    this.selectedSize = size;
+    this.cdr.markForCheck();
+  }
+
   private detectCurrentAvailableSize() {
-    const availableSizes = this.getAvailableSizes().filter(size => !size.disabled);
+    const availableSizes = this.availableSizes.filter(size => !size.disabled);
     if (availableSizes.length > 0) {
       this.selectedSize = availableSizes[0].value;
     }

@@ -48,13 +48,13 @@ export class HomeComponent {
     { label: 'EN', value: 'EN' }
   ];
 
-  onCurrencyChange(currency: Currency): void {
-    this.currencyService.setCurrency(currency);
+  onCurrencyChange(currency: string): void {
+    this.currencyService.setCurrency(currency as Currency);
     this.cdr.markForCheck();
   }
   
-  onLanguageChange(language: Language): void {
-    this.translationService.setLanguage(language);
+  onLanguageChange(language: string): void {
+    this.translationService.setLanguage(language as Language);
     this.cdr.markForCheck();
   }
 

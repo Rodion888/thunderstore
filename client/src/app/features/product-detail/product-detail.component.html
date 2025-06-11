@@ -26,8 +26,9 @@
       <app-custom-select
         [label]="'t-shirt-size' | translate"
         [options]="getAvailableSizes()"
-        [(ngModel)]="selectedSize"
-        placeholder="{{ 'select-size' | translate }}">
+        [value]="selectedSize"
+        [placeholder]="'select-size' | translate"
+        (valueChange)="onSizeChange($event)">
       </app-custom-select>
 
       <app-button type="btn" class="add-to-cart" [text]="'add-to-cart' | translate" (buttonClick)="addToCart()"></app-button>
