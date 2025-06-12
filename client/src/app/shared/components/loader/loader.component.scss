@@ -1,0 +1,49 @@
+@use '../../../../assets/styles/variables' as *;
+
+.loader {
+  position: relative;
+  overflow: hidden;
+  box-shadow: -2px -2px -2px rgba(255, 255, 255, 0.1),
+              4px 4px 4px rgba(0, 0, 0, 0.4),
+              inset -2px -2px -2px rgba(255, 255, 255, 0.2),
+              inset 4px 4px 4px rgba(0, 0, 0, 0.4);
+  height: 50px;
+  width: 50px;
+  border-radius: 50%;
+}
+
+.loader:before {
+  position: absolute;
+  content: '';
+  z-index: 10;
+  opacity: 1;
+  top: 12px; 
+  left: 12px;
+  right: 12px; 
+  bottom: 12px; 
+  background-color: $color-background-dark;
+  border-radius: 50%;
+  box-shadow: -2px -2px -2px rgba(255, 255, 255, 0.1),
+    4px 4px 4px rgba(0, 0, 0, 0.4),
+    inset -2px -2px -2px rgba(255, 255, 255, 0.2),
+    inset 4px 4px 4px rgba(0, 0, 0, 0.4);
+}
+
+.loader span {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  filter: blur(7px);
+  border-radius: 50%;
+  background: linear-gradient($color-text-accent, $color-text-secondary, $color-text-default);
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

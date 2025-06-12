@@ -23,9 +23,41 @@
   z-index: 10;
   overflow-y: auto;
   overflow-x: hidden;
-  background: radial-gradient(80% 50% at 125% 30%, rgb(255 255 255 / 40%) 0%, rgb(35 38 55 / 60%) 30%, rgb(0 0 0) 100%), radial-gradient(100% 80% at 10% 30%, rgb(0 0 0 / 30%) 0%, rgb(246, 130, 94) 40%, rgb(115 109 119) 100%);
+  background: radial-gradient(
+    80% 50% at 125% 30%,
+    rgb(255 255 255 / 40%) 0%,
+    rgb(35 38 55 / 60%) 30%,
+    rgb(0 0 0) 100%),
+  radial-gradient(100% 80% at 10% 30%,
+    rgb(0 0 0 / 30%) 0%,
+    rgb(246, 130, 94) 40%,
+    rgb(115 109 119) 100%,
+  );
   border-radius: 12px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8), inset 0 0 100px rgba(0, 0, 0, 0.7);
+  
+  app-loader {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
+  
+  .card-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  
+  .card-animate-in {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+    transform: translateY(30px);
+    visibility: visible;
+    pointer-events: auto;
+  }
+  
   &::before {
     content: '';
     position: fixed;
@@ -35,7 +67,7 @@
     height: 100vh;
     background-image: radial-gradient(
       rgba(255, 255, 255, 0.2),
-      transparent 1.5px
+      transparent 1.5px,
     );
     background-size: 3px 3px;
     opacity: 0.4;
@@ -44,7 +76,12 @@
   }
   &::after {
     content: "";
-    background: radial-gradient(circle at center, rgb(214 188 152) 0%, rgb(0 0 0 / 30%) 50%, rgb(214 188 152) 100%);
+    background: radial-gradient(
+      circle at center,
+      rgb(214 188 152) 0%,
+      rgb(0 0 0 / 30%) 50%,
+      rgb(214 188 152) 100%,
+    );
     filter: blur(48px);
     border-radius: 50%;
     position: absolute;
@@ -61,7 +98,6 @@
   position: fixed;
   bottom: 0.8rem;
   width: 100%;
-  margin-left: 1.8rem;
   height: 3rem;
   display: flex;
   align-items: center;
@@ -71,8 +107,9 @@
 .footer-links {
   display: flex;
   gap: 1rem;
-  flex-basis: 78%;
-  
+  flex-basis: 70%;
+  margin-left: 4rem;
+
   span {
     cursor: pointer;
     transition: color 0.2s ease;
@@ -84,7 +121,7 @@
 }
 
 .currency-language-selectors {
-  flex-basis: 20%;
+  flex-basis: 30%;
   margin-right: 4rem;
   display: flex;
   justify-content: space-between;
@@ -122,6 +159,7 @@
     font-size: 0.7rem;
     gap: 1rem;
     margin-bottom: 0.4rem;
+    margin-left: 0;
     
     span {
       display: flex;
@@ -135,5 +173,16 @@
     flex-basis: 54%;
     display: flex;
     gap: 0.4rem;
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

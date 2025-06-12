@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, HostListener } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, HostListener, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
@@ -10,6 +10,8 @@ import { SelectOption, CustomSelectComponent } from '../../shared/components/cus
 import { TranslationService, Language } from '../../core/services/translation.service';
 import { Product } from '../../core/types/product.types';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
+import { LoaderComponent } from '../../shared/components/loader/loader.component';
+import { of, delay, tap, expand, takeWhile } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -21,11 +23,12 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
     FormsModule,
     CardComponent,
     CustomSelectComponent,
-    TranslatePipe
+    TranslatePipe,
+    LoaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   private productService = inject(ProductService);
   private cartService = inject(CartService);
   private cdr = inject(ChangeDetectorRef);
@@ -38,6 +41,9 @@ export class HomeComponent {
   hasMore = this.productService.hasMore;
   products = this.productService.products;
   
+  showLoader = signal(true);
+  visibleProductsCount = signal(0);
+  
   currencyOptions: SelectOption[] = [
     { label: '₽', value: 'RUB' },
     { label: '$', value: 'USD' }
@@ -47,6 +53,35 @@ export class HomeComponent {
     { label: 'RU', value: 'RU' },
     { label: 'EN', value: 'EN' }
   ];
+
+  ngOnInit(): void {
+    of(null).pipe(
+        delay(1000),
+        tap(() => {
+          this.showLoader.set(false);
+          this.cdr.markForCheck();
+        }),
+        delay(100),
+        tap(() => this.startProductAnimation())
+      ).subscribe();
+  }
+
+  private startProductAnimation(): void {
+    const totalProducts = this.products().length;
+    
+    of(0).pipe(
+        expand(currentIndex => 
+          currentIndex < totalProducts - 1 
+            ? of(currentIndex + 1).pipe(delay(200))
+            : of()
+        ),
+        takeWhile(currentIndex => currentIndex < totalProducts),
+        tap(currentIndex => {
+          this.visibleProductsCount.set(currentIndex + 1);
+          this.cdr.markForCheck();
+        })
+      ).subscribe();
+  }
 
   onCurrencyChange(currency: string): void {
     this.currencyService.setCurrency(currency as Currency);
@@ -60,15 +95,40 @@ export class HomeComponent {
 
   onScroll(event: Event): void {
     const element = event.target as HTMLElement;
-  
-    if (!this.hasMore()) return;
+    
+    const allCurrentProductsVisible = this.visibleProductsCount() >= this.products().length;
+    
+    if (!allCurrentProductsVisible || !this.hasMore()) return;
   
     const scrollPosition = element.scrollTop + element.clientHeight;
     const bottomPosition = element.scrollHeight - 100;
   
     if (scrollPosition >= bottomPosition) {
+      const currentVisibleCount = this.visibleProductsCount();
       this.productService.loadMoreProducts();
+      
+      of(null).pipe(
+          delay(100),
+          tap(() => this.continueProductAnimation(currentVisibleCount))
+        ).subscribe();
     }
+  }
+
+  private continueProductAnimation(startIndex: number): void {
+    const totalProducts = this.products().length;
+    
+    of(startIndex).pipe(
+        expand(currentIndex => 
+          currentIndex < totalProducts - 1 
+            ? of(currentIndex + 1).pipe(delay(200))
+            : of()
+        ),
+        takeWhile(currentIndex => currentIndex < totalProducts),
+        tap(currentIndex => {
+          this.visibleProductsCount.set(currentIndex + 1);
+          this.cdr.markForCheck();
+        })
+      ).subscribe();
   }
 
   @HostListener('window:pagehide')

@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ElementRef, ViewChild, HostListener, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
+import { Component, AfterViewInit, ElementRef, ViewChild, HostListener, ChangeDetectionStrategy, OnDestroy, inject } from '@angular/core';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { Router } from '@angular/router';
@@ -13,7 +13,9 @@ import * as THREE from 'three';
 })
 export class LogoComponent implements AfterViewInit, OnDestroy {
   @ViewChild('logoCanvas') private readonly canvasRef!: ElementRef<HTMLCanvasElement>;
-  
+
+  private readonly router = inject(Router);
+
   // Three.js objects
   private mesh: THREE.Mesh | null = null;
   private group: THREE.Group | null = null;
@@ -49,8 +51,6 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
     ],
     directional: { color: 0xffffff, intensity: 1.5, position: [0, 0, 5] as [number, number, number] }
   };
-
-  constructor(private router: Router) {}
 
   ngAfterViewInit(): void {
     this.initScene();
@@ -91,6 +91,7 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
     this.renderer.setClearColor(0x000000, 0);
     
     this.group = new THREE.Group();
+    this.group.rotation.x = 0.2;
     this.scene.add(this.group);
   }
 

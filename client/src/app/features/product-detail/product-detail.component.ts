@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../core/services/product.service';
@@ -11,6 +11,8 @@ import { BackgroundVideoComponent } from '../../shared/components/background-vid
 import { BackgroundService } from '../../core/services/background.service';
 import { AppCurrencyPipe } from "../../shared/pipes/currency.pipe";
 import { TranslatePipe } from "../../shared/pipes/translate.pipe";
+import { LoaderComponent } from '../../shared/components/loader/loader.component';
+import { of, delay, tap } from 'rxjs';
 
 @Component({
   selector: 'app-product-detail',
@@ -23,7 +25,8 @@ import { TranslatePipe } from "../../shared/pipes/translate.pipe";
     CustomSelectComponent,
     BackgroundVideoComponent,
     AppCurrencyPipe,
-    TranslatePipe
+    TranslatePipe,
+    LoaderComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -36,11 +39,15 @@ export class ProductDetailComponent implements OnInit {
 
   product: Product | null = null;
   selectedSize: string = '';
-  currentImageIndex: number = 0;
-  images: string[] = [];
   currentImage: string = '';
   fullscreenImage: string | null = null;
   availableSizes: SelectOption[] = [];
+  showLoader = signal(true);
+  showLeftSide = signal(false);
+  showRightSide = signal(false);
+
+  private currentImageIndex: number = 0;
+  private images: string[] = [];
 
   constructor() {
     this.backgroundService.setVideo('assets/videos/bg.mp4');
@@ -60,41 +67,6 @@ export class ProductDetailComponent implements OnInit {
     this.route.paramMap.subscribe((params) => {
       this.loadProduct(Number(params.get('id')));
     });
-  }
-
-  private loadProduct(id: number): void {
-    this.productService.getProductById(id).subscribe({
-      next: (product) => {
-        if (product) {
-          this.product = product;
-          this.setupImages();
-          this.setupSizes();
-          this.cdr.detectChanges();
-        }
-      },
-    });
-  }
-
-  private setupImages(): void {
-    if (!this.product) return;
-    this.images = [this.product.images.front, this.product.images.back];
-    this.currentImage = this.images[0];
-  }
-
-  private setupSizes(): void {
-    if (!this.product) return;
-    
-    this.availableSizes = Object.entries(this.product.stock)
-      .filter(([_, count]) => count > 0)
-      .map(([size]) => ({
-        label: size,
-        value: size,
-        disabled: false,
-      }));
-
-    if (this.availableSizes.length > 0) {
-      this.selectedSize = this.availableSizes[0].value;
-    }
   }
 
   openFullscreen(imageUrl: string): void {
@@ -117,6 +89,68 @@ export class ProductDetailComponent implements OnInit {
 
   onSizeChange(size: string): void {
     this.selectedSize = size;
+  }
+
+  private loadProduct(id: number): void {
+    this.showLoader.set(true);
+    this.showLeftSide.set(false);
+    this.showRightSide.set(false);
+    
+    this.productService.getProductById(id).subscribe({
+      next: (product) => {
+        if (product) {
+          this.product = product;
+          this.setupImages();
+          this.setupSizes();
+          this.cdr.detectChanges();
+          
+          this.startContentAnimation();
+        }
+      },
+    });
+  }
+
+  private startContentAnimation(): void {
+    of(null)
+      .pipe(
+        delay(1000),
+        tap(() => {
+          this.showLoader.set(false);
+          this.cdr.markForCheck();
+        }),
+        delay(100),
+        tap(() => {
+          this.showLeftSide.set(true);
+          this.cdr.markForCheck();
+        }),
+        delay(300),
+        tap(() => {
+          this.showRightSide.set(true);
+          this.cdr.markForCheck();
+        })
+      ).subscribe();
+  }
+
+  private setupImages(): void {
+    if (!this.product) return;
+    this.images = [this.product.images.front, this.product.images.back];
+    this.currentImage = this.images[0];
+  }
+
+  private setupSizes(): void {
+    if (!this.product) return;
+    
+    this.availableSizes = Object.entries(this.product.stock)
+      .filter(([_, count]) => count > 0)
+      .map(([size]) => ({
+        label: size,
+        value: size,
+        disabled: false,
+      }));
+
+    if (this.availableSizes.length > 0) {
+      this.selectedSize = this.availableSizes[0].value;
+    }
   }
 }
 
