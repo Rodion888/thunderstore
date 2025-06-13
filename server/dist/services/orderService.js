@@ -1,81 +1,75 @@
 import pool from '../db.js';
-import { carts } from '../storage/carts.js';
-async function createOrder(sessionId, orderData) {
-    const client = await pool.connect();
+async function createOrder(sessionId, orderData, cartItems, totalAmount) {
     try {
-        await client.query('BEGIN');
-        // Получаем корзину пользователя
-        const cartItems = orderData.cartItems.length > 0
-            ? orderData.cartItems
-            : (carts.get(sessionId) || []);
-        if (cartItems.length === 0) {
-            throw new Error('Cart is empty');
-        }
-        // Создаем заказ в таблице orders
-        const orderResult = await client.query(`INSERT INTO orders (
-        user_id, 
+        const { deliveryType, fullName, phone, email, city, address, comment, paymentMethod } = orderData;
+        const items = JSON.stringify(cartItems);
+        const result = await pool.query(`INSERT INTO orders (
+        user_session_id, 
         total_amount, 
-        status, 
+        items, 
         delivery_type, 
         full_name, 
-        email, 
         phone, 
+        email, 
         city, 
         address, 
         comment, 
-        payment_method
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`, [
-            sessionId,
-            orderData.totalAmount,
-            'pending',
-            orderData.deliveryType,
-            orderData.fullName,
-            orderData.email,
-            orderData.phone,
-            orderData.city,
-            orderData.address,
-            orderData.comment || '',
-            orderData.paymentMethod
-        ]);
-        const orderId = orderResult.rows[0].id;
-        // Сохраняем товары заказа в таблицу order_items
-        for (const item of cartItems) {
-            await client.query(`INSERT INTO order_items (
-          order_id, 
-          product_id, 
-          quantity, 
-          price
-        ) VALUES ($1, $2, $3, $4)`, [orderId, item.productId, item.quantity, item.price]);
-        }
-        // Очищаем корзину пользователя
-        carts.set(sessionId, []);
-        await client.query('COMMIT');
-        return {
-            orderId,
-            message: 'Order created successfully'
-        };
+        payment_method, 
+        status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING id`, [sessionId, totalAmount, items, deliveryType, fullName, phone, email, city, address, comment, paymentMethod, 'processing']);
+        return result.rows[0].id;
     }
     catch (error) {
-        await client.query('ROLLBACK');
         console.error('Error creating order:', error);
         throw error;
     }
-    finally {
-        client.release();
-    }
 }
-async function getOrders(userId) {
+async function decreaseStock(cartItems) {
     try {
-        const result = await pool.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
-        return result.rows;
+        for (const item of cartItems) {
+            const result = await pool.query(`SELECT stock FROM products WHERE id = $1`, [item.id]);
+            if (result.rows.length > 0 &&
+                result.rows[0].stock &&
+                result.rows[0].stock[item.size] !== undefined) {
+                const currentStock = parseInt(result.rows[0].stock[item.size], 10);
+                const newStock = currentStock - item.quantity;
+                await pool.query(`UPDATE products
+           SET stock = jsonb_set(stock, $1, $2::jsonb)
+           WHERE id = $3`, [
+                    `{${item.size}}`,
+                    JSON.stringify(newStock),
+                    item.id,
+                ]);
+            }
+            else {
+                console.warn(`Warning: Stock for product ${item.id} size ${item.size} not found or invalid.`);
+            }
+        }
     }
     catch (error) {
-        console.error('Error getting orders:', error);
+        console.error('Error decreasing stock:', error);
         throw error;
     }
 }
-export default {
-    createOrder,
-    getOrders
-};
+async function validateCartItems(cartItems) {
+    try {
+        for (const item of cartItems) {
+            const result = await pool.query(`SELECT stock FROM products WHERE id = $1`, [item.id]);
+            if (result.rows.length === 0) {
+                return { isValid: false, message: `Product with ID ${item.id} not found.` };
+            }
+            const currentStock = result.rows[0].stock[item.size];
+            if (currentStock === undefined || currentStock < item.quantity) {
+                return { isValid: false, message: `Not enough product "${item.name}" size ${item.size} (available: ${currentStock || 0}, requested: ${item.quantity}).` };
+            }
+        }
+        return { isValid: true };
+    }
+    catch (error) {
+        console.error('Error validating cart:', error);
+        return { isValid: false, message: 'Error validating cart.' };
+    }
+}
+export default { createOrder, decreaseStock, validateCartItems };
 //# sourceMappingURL=orderService.js.map

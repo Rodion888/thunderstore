@@ -1,39 +1,64 @@
 import Fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fastifyCookie from '@fastify/cookie';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
+import pg from 'pg';
+const { Pool } = pg;
 import productRoutes from './routes/products.js';
 import cartRoutes from './routes/cart.js';
 import paymentRoutes from './routes/payment.js';
 import orderRoutes from './routes/orders.js';
+import telegramRoutes from './routes/telegram.js';
+import deploymentRoutes from './routes/deployment.js';
 import dotenv from 'dotenv';
 import { setupWebSocket } from './wsServer.js';
-// Загружаем конфигурацию из файла .env
+import { TelegramBot } from './utils/telegram-bot.js';
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
 dotenv.config({ path: envFile });
-// Создаем экземпляр Fastify
 const fastify = Fastify({
     logger: { level: 'info' },
 });
-// CORS настройки
+const pool = new Pool({
+    user: process.env.PGUSER,
+    host: process.env.PGHOST,
+    database: process.env.PGDATABASE,
+    password: process.env.PGPASSWORD,
+    port: parseInt(process.env.PGPORT || '5432'),
+});
+const telegramBot = new TelegramBot(fastify);
+fastify.setErrorHandler(async (error, request, reply) => {
+    fastify.log.error(error);
+    const statusCode = error.statusCode || 500;
+    if (statusCode >= 500) {
+        telegramBot.sendErrorNotification(error.message, `${request.method} ${request.url}`);
+    }
+    return reply.status(statusCode).send({
+        error: 'Internal Server Error',
+        message: error.message
+    });
+});
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:4200';
-// Регистрируем плагин CORS
 fastify.register(fastifyCors, {
     origin: CORS_ORIGIN,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
 });
-// Регистрируем плагин для работы с cookies
 fastify.register(fastifyCookie);
-// Регистрируем маршруты
+fastify.decorate('pool', pool);
+fastify.decorate('telegramBot', telegramBot);
 fastify.register(productRoutes, { prefix: '/api' });
 fastify.register(cartRoutes, { prefix: '/api' });
 fastify.register(paymentRoutes, { prefix: '/api' });
 fastify.register(orderRoutes, { prefix: '/api' });
-// Глобальный обработчик запросов для создания сессии
+fastify.register(deploymentRoutes, { prefix: '/api' });
+fastify.register(async (instance) => {
+    await telegramRoutes(instance, telegramBot);
+}, { prefix: '/api' });
+fastify.get('/api/health', async (request, reply) => {
+    return reply.send({ status: 'ok' });
+});
 fastify.addHook('onRequest', (req, reply, done) => {
-    // Проверяем наличие sessionId после регистрации cookie плагина
     if (!req.cookies || !req.cookies.sessionId) {
         const sessionId = crypto.randomUUID();
         reply.setCookie('sessionId', sessionId, {
@@ -45,10 +70,11 @@ fastify.addHook('onRequest', (req, reply, done) => {
     }
     done();
 });
-// Настройки сервера
+fastify.addHook('onClose', async () => {
+    await pool.end();
+});
 const PORT = 3000;
 const HOST = "0.0.0.0";
-// Запуск сервера
 const start = async () => {
     try {
         const server = await fastify.listen({ port: PORT, host: HOST });

@@ -1,33 +1,27 @@
+import { carts } from '../storage/carts.js';
 import orderService from '../services/orderService.js';
 export default async function orderRoutes(fastify) {
-    // Create a new order
     fastify.post('/orders', async (req, reply) => {
+        const sessionId = req.cookies.sessionId;
+        if (!sessionId) {
+            return reply.status(400).send({ message: 'Session not found' });
+        }
+        const orderData = req.body;
+        const cartItems = carts.get(sessionId) || [];
+        const totalAmount = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
         try {
-            const sessionId = req.cookies.sessionId;
-            if (!sessionId) {
-                return reply.status(400).send({ message: 'Session not found' });
+            const validationResult = await orderService.validateCartItems(cartItems);
+            if (!validationResult.isValid) {
+                return reply.status(400).send({ message: validationResult.message });
             }
-            const orderData = req.body;
-            const result = await orderService.createOrder(sessionId, orderData);
-            return reply.send(result);
+            const orderId = await orderService.createOrder(sessionId, orderData, cartItems, totalAmount);
+            await orderService.decreaseStock(cartItems);
+            carts.delete(sessionId);
+            reply.send({ message: 'Order successfully created', orderId });
         }
         catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Server error';
-            return reply.status(500).send({ message: errorMessage });
-        }
-    });
-    // Get user orders
-    fastify.get('/orders', async (req, reply) => {
-        try {
-            const sessionId = req.cookies.sessionId;
-            if (!sessionId) {
-                return reply.status(400).send({ message: 'Session not found' });
-            }
-            const orders = await orderService.getOrders(sessionId);
-            return reply.send({ orders });
-        }
-        catch (error) {
-            return reply.status(500).send({ message: 'Server error' });
+            console.error('Error creating order:', error);
+            reply.status(500).send({ message: 'Failed to create order' });
         }
     });
 }

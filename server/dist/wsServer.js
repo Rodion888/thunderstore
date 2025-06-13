@@ -1,8 +1,6 @@
 import { WebSocketServer } from 'ws';
 import { carts } from './storage/carts.js';
-// Используем Map для хранения информации о подключенных клиентах
 export const clients = new Map();
-// Импортируем Map корзин (заглушка для TypeScript, нужно будет создать отдельный файл для хранения)
 export function setupWebSocket(server) {
     const wss = new WebSocketServer({ server });
     wss.on('connection', (ws, req) => {
@@ -11,9 +9,18 @@ export function setupWebSocket(server) {
             ws.close();
             return;
         }
-        clients.set(sessionId, ws);
+        if (!clients.has(sessionId)) {
+            clients.set(sessionId, new Set());
+        }
+        clients.get(sessionId)?.add(ws);
         ws.on('close', () => {
-            clients.delete(sessionId);
+            const sessionClients = clients.get(sessionId);
+            if (sessionClients) {
+                sessionClients.delete(ws);
+                if (sessionClients.size === 0) {
+                    clients.delete(sessionId);
+                }
+            }
         });
     });
 }
@@ -21,13 +28,20 @@ export async function broadcastCartUpdate(sessionId) {
     const userCart = carts.get(sessionId) || [];
     const cartData = JSON.stringify({ cart: userCart });
     try {
-        const client = clients.get(sessionId);
-        if (client) {
-            client.send(cartData);
+        const sessionClients = clients.get(sessionId);
+        if (sessionClients && sessionClients.size > 0) {
+            sessionClients.forEach(client => {
+                try {
+                    client.send(cartData);
+                }
+                catch (error) {
+                    console.error('Error sending to one client:', error);
+                }
+            });
         }
     }
     catch (error) {
-        console.error('Error update WebSocket:', error);
+        console.error('Error broadcasting cart update:', error);
     }
 }
 //# sourceMappingURL=wsServer.js.map

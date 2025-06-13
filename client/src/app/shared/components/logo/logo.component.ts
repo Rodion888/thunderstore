@@ -91,7 +91,6 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
     this.renderer.setClearColor(0x000000, 0);
     
     this.group = new THREE.Group();
-    this.group.rotation.x = 0.2;
     this.scene.add(this.group);
   }
 

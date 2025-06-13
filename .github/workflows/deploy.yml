@@ -1,4 +1,4 @@
-name: Deploy Thunder Store
+name: Deploy application
 
 on:
   push:
@@ -20,19 +20,9 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /var/www/thunder-store
-
+            
             echo "Updating repository"
             git pull origin main
-
-            echo "Creating logs directory"
-            mkdir -p /var/www/thunder-store/logs
-            chmod 755 /var/www/thunder-store/logs
-
-            echo "Setting up product storage"
-            mkdir -p /var/www/thunder-store/uploads/products
-            chmod 755 /var/www/thunder-store/uploads
-            chmod 755 /var/www/thunder-store/uploads/products
-            mkdir -p /var/www/thunder-store/client/src/assets/static
 
             echo "Configuring PostgreSQL for remote connections"
             PG_CONF=$(find /etc/postgresql -name postgresql.conf | head -n 1)
