@@ -1,5 +1,6 @@
 @use '../../../assets/styles/index.scss';
-@use "../../../assets/styles/variables";
+@use '../../../assets/styles/variables' as *;
+
 
 .product-container::-webkit-scrollbar {
   display: none;
@@ -21,8 +22,7 @@
   overflow-x: hidden;
   border-radius: 12px;
   z-index: 100;
-  background-color: rgba(20, 20, 20, 0.2);
-  border: 2px solid rgba(30, 30, 30, 0.4);
+  backdrop-filter: blur(10px);
 }
 
 .loader-container {
@@ -55,17 +55,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 400px;
+  aspect-ratio: 1;
 
   .product-image {
     width: 94%;
+    height: 94%;
     object-fit: contain;
     border-radius: 12px;
     border: 2px solid rgba(30, 30, 30, 0.4);
     cursor: zoom-in;
+    transition: opacity 0.3s ease;
   }
 
   .arrow {
     position: absolute;
+    z-index: 2;
     &.left {
       left: 2rem;
     }
@@ -102,6 +107,10 @@
   margin-top: auto;
 }
 
+.actions-select {
+  flex-basis: 30%;
+}
+
 @media (max-width: 624px) {
   .product-container {
     transform: translate(-50%, calc(-50% + 3rem));
@@ -129,7 +138,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: variables.$color-background-dark;
+  background: $color-background-dark;
   display: flex;
   align-items: center;
   justify-content: center;

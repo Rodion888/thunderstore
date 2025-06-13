@@ -4,8 +4,6 @@ import { CartService } from '../../core/services/cart.service';
 import { CartItem } from '../../core/types/cart.types';
 import { Router } from '@angular/router';
 import { ButtonComponent } from '../../shared/components/button/button.component';
-import { BackgroundVideoComponent } from '../../shared/components/background-video/background-video.component';
-import { BackgroundService } from '../../core/services/background.service';
 import { SummaryComponent } from '../../shared/components/summary/summary.component';
 import { AppCurrencyPipe } from '../../shared/pipes/currency.pipe';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
@@ -14,19 +12,20 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
   selector: 'app-cart',
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.scss'],
-  imports: [CommonModule, ButtonComponent, BackgroundVideoComponent, SummaryComponent, AppCurrencyPipe, TranslatePipe],
+  imports: [
+    CommonModule,
+    ButtonComponent,
+    SummaryComponent,
+    AppCurrencyPipe,
+    TranslatePipe,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CartComponent {
   private cartService = inject(CartService);
   private router = inject(Router);
-  private backgroundService = inject(BackgroundService);
 
   cartItems = computed(() => this.groupCartItems(this.cartService.cartItems()));
-
-  constructor() {
-    this.backgroundService.setVideo('assets/videos/bg.mp4');
-  }
 
   cartTotal() {
     return this.cartItems().reduce((sum, item) => sum + item.price * item.quantity, 0);

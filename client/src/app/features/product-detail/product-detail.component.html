@@ -1,11 +1,9 @@
-<app-background-video></app-background-video>
+<div class="loader-container" *ngIf="showLoader()">
+  <app-loader></app-loader>
+</div>
 
-<div class="product-container" *ngIf="product">
-  <div class="loader-container" *ngIf="showLoader()">
-    <app-loader></app-loader>
-  </div>
-
-  <ng-container *ngIf="!showLoader()">
+<div class="product-container" *ngIf="product && !showLoader()">
+  <ng-container>
     <div class="image-carousel" 
          [class.content-animate-in]="showLeftSide()"
          [class.content-hidden]="!showLeftSide()">
@@ -33,6 +31,7 @@
 
       <div class="actions">
         <app-custom-select
+          class="actions-select"
           [label]="'t-shirt-size' | translate"
           [options]="availableSizes"
           [value]="selectedSize"

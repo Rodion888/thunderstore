@@ -4,6 +4,7 @@
 > Angular & Node.js Application
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-thunder--store.ru-blue?style=for-the-badge)](https://thunder-store.ru)
+<br/>
 [![Angular](https://img.shields.io/badge/Angular-19.1.0-red?style=flat-square&logo=angular)](https://angular.io/)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-green?style=flat-square&logo=node.js)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7.2-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
@@ -13,8 +14,6 @@
 ## Overview
 
 E-commerce platform for custom t-shirts with product catalog, shopping cart, and cryptocurrency payments.
-
-**Live Demo:** [thunder-store.ru](https://thunder-store.ru)
 
 ---
 
@@ -127,6 +126,6 @@ cd client && npm start
 
 <div align="center">
 
-**Thunder Store**
+**With love Thunder Store**
 
 </div> 

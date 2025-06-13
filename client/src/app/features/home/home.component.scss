@@ -3,6 +3,20 @@
 :host {
   display: flex;
   justify-content: center;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: $color-background-dark;
+  background: radial-gradient(
+    125% 125% at 50% 10%,
+    $color-background-dark 40%,
+    rgba(88, 133, 222, 0.4)
+  );
+  z-index: -10;
+  backdrop-filter: blur(10px);
 }
 
 .cards-list::-webkit-scrollbar {

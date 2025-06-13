@@ -7,16 +7,21 @@ html, body {
   width: 100%;
   min-height: 100%;
   background-color: variables.$color-background-dark;
+  background-image: repeating-radial-gradient(
+    circle at 0 0,
+    transparent 0,
+    variables.$color-background-dark 30px
+  ),
+  repeating-linear-gradient(
+    rgba(246, 130, 94, 0.1),
+    rgba(88, 133, 222, 0.2)
+  );
+  background-attachment: fixed;
   letter-spacing: -.01em;
   font-family: "Titillium Web", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
   transition: background-color 0.5s ease-in-out;
   overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
-}
-
-* {
-  letter-spacing: -.01em;
-  font-family: "Titillium Web", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
 }
 
 body {

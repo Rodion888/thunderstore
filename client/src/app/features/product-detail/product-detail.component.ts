@@ -7,8 +7,6 @@ import { Product } from '../../core/types/product.types';
 import { CartService } from '../../core/services/cart.service';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { CustomSelectComponent, SelectOption } from '../../shared/components/custom-select/custom-select.component';
-import { BackgroundVideoComponent } from '../../shared/components/background-video/background-video.component';
-import { BackgroundService } from '../../core/services/background.service';
 import { AppCurrencyPipe } from "../../shared/pipes/currency.pipe";
 import { TranslatePipe } from "../../shared/pipes/translate.pipe";
 import { LoaderComponent } from '../../shared/components/loader/loader.component';
@@ -23,7 +21,6 @@ import { of, delay, tap } from 'rxjs';
     FormsModule,
     ButtonComponent,
     CustomSelectComponent,
-    BackgroundVideoComponent,
     AppCurrencyPipe,
     TranslatePipe,
     LoaderComponent
@@ -35,7 +32,6 @@ export class ProductDetailComponent implements OnInit {
   private productService = inject(ProductService);
   private cartService = inject(CartService);
   private cdr = inject(ChangeDetectorRef);
-  private backgroundService = inject(BackgroundService);
 
   product: Product | null = null;
   selectedSize: string = '';
@@ -48,10 +44,6 @@ export class ProductDetailComponent implements OnInit {
 
   private currentImageIndex: number = 0;
   private images: string[] = [];
-
-  constructor() {
-    this.backgroundService.setVideo('assets/videos/bg.mp4');
-  }
 
   prevImage(): void {
     this.currentImageIndex = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
