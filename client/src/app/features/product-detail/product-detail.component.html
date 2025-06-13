@@ -12,10 +12,6 @@
       <app-button type="arrow-right" class="arrow right" (buttonClick)="nextImage()"></app-button>
     </div>
 
-    <div class="fullscreen-overlay" *ngIf="fullscreenImage" (click)="closeFullscreen()">
-      <img [src]="fullscreenImage" class="fullscreen-image" />
-    </div>
-
     <div class="product-info" 
          [class.content-animate-in]="showRightSide()"
          [class.content-hidden]="!showRightSide()">
@@ -43,4 +39,8 @@
       </div>
     </div>
   </ng-container>
+</div>
+
+<div class="fullscreen-overlay" *ngIf="fullscreenImage" (click)="closeFullscreen()">
+  <img [src]="fullscreenImage" class="fullscreen-image" />
 </div>
