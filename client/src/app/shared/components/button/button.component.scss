@@ -1,4 +1,4 @@
-@use '../../../../assets/styles/variables';
+@use '../../../../assets/styles/variables' as *;
 
 .glow-button {
   --x: 90%;
@@ -64,7 +64,7 @@
     border-radius: 50%;
 
     .icon {
-      color: variables.$color-background-dark;
+      color: $color-dark;
       font-size: 1rem;
       z-index: 2;
       pointer-events: none;

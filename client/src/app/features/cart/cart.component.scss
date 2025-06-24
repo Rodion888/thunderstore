@@ -1,5 +1,5 @@
-@use '../../../assets/styles/index.scss';
-@use "../../../assets/styles/variables";
+@use '../../../assets/styles/index.scss' as *;
+@use "../../../assets/styles/variables" as *;
 
 :host {
   display: flex;
@@ -62,7 +62,7 @@
   justify-content: space-between;
   padding: 1rem;
   border-radius: 8px;
-  color: variables.$color-text-default;
+  color: $color-default-white;
   background-color: rgba(30, 30, 30, 0.4);
 }
 

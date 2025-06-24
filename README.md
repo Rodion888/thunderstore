@@ -126,6 +126,6 @@ cd client && npm start
 
 <div align="center">
 
-**With love Thunder Store**
+**With Love Thunder Store**
 
 </div> 

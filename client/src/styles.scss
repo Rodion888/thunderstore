@@ -1,16 +1,16 @@
-@use 'assets/styles/index.scss';
-@use "assets/styles/variables";
+@use 'assets/styles/index.scss' as *;
+@use "assets/styles/variables" as *;
 
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   min-height: 100%;
-  background-color: variables.$color-background-dark;
+  background-color: $color-dark;
   background-image: repeating-radial-gradient(
     circle at 0 0,
     transparent 0,
-    variables.$color-background-dark 30px
+    $color-dark 30px
   ),
   repeating-linear-gradient(
     rgba(246, 130, 94, 0.1),

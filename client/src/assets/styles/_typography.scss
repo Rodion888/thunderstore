@@ -21,46 +21,46 @@
 }
 
 .color-default {
-  color: $color-text-default;
+  color: $color-default-white;
 }
 
 .color-accent {
-  color: $color-text-accent;
+  color: $color-accent;
 }
 
 .color-secondary {
-  color: $color-text-secondary;
+  color: $color-secondary;
 }
 
 .color-tertiary {
-  color: $color-text-tertiary;
+  color: $color-tertiary;
 }
 
 .title {
   font-size: $text-size-lg;
   font-weight: bold;
-  color: $color-text-default;
+  color: $color-default-white;
 }
 
 .subtitle {
   font-size: $text-size-md;
-  color: $color-text-default;
+  color: $color-default-white;
 }
 
 .text-price {
   font-size: $text-size-sm;
-  color: $color-text-secondary;
+  color: $color-secondary;
   font-weight: bold;
 }
 
 .text-default {
   font-size: $text-size-sm;
-  color: $color-text-default;
+  color: $color-default-white;
 }
 
 .text-accent {
   font-size: $text-size-sm;
-  color: $color-text-accent;
+  color: $color-accent;
 }
 
 .text-bold {

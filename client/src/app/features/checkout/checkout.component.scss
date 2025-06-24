@@ -1,9 +1,9 @@
-@use '../../../assets/styles/index.scss';
-@use "../../../assets/styles/variables";
+@use '../../../assets/styles/index.scss' as *;
+@use '../../../assets/styles/variables' as *;
 
 .background-container {
   height: 100%;
-  background-color: variables.$color-background-dark;
+  background-color: $color-dark;
   overflow: hidden;
 }
 
@@ -22,7 +22,7 @@
     padding: 0.4rem 0.8rem;
     border-radius: 9999px;
     background-color: transparent;
-    color: variables.$color-text-default;
+    color: $color-default-white;
     border: none;
     cursor: pointer;
 
@@ -31,8 +31,8 @@
     }
 
     &.active {
-      background-color: variables.$color-text-accent;
-      color: variables.$color-background-dark;
+      background-color: $color-accent;
+      color: $color-dark;
     }
   }
 }
@@ -54,7 +54,7 @@
   border-radius: 12px;
   z-index: 100;
   backdrop-filter: blur(10px);
-  color: variables.$color-text-default;
+  color: $color-default-white;
 
   h1 {
     margin-bottom: 1rem;
@@ -75,11 +75,11 @@
       align-items: center;
       gap: 0.5rem;
       cursor: pointer;
-      color: variables.$color-text-default;
+      color: $color-default-white;
     }
 
     input[type='radio'] {
-      accent-color: variables.$color-text-accent;
+      accent-color: $color-accent;
     }
   }
 
@@ -141,7 +141,7 @@
 }
 
 .error-message {
-  color: #cd2828;
+  color: $color-red;
   font-size: 0.75rem;
   margin-top: 0.25rem;
 }

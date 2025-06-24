@@ -63,7 +63,6 @@
     height: 94%;
     object-fit: contain;
     border-radius: 12px;
-    border: 2px solid rgba(30, 30, 30, 0.4);
     cursor: zoom-in;
     transition: opacity 0.3s ease;
   }
@@ -134,7 +133,7 @@
 
 .fullscreen-overlay {
   position: fixed;
-  background: rgba(9, 10, 12, 0.95);
+  background: $color-dark;
   z-index: 9999;
   cursor: zoom-out;
 }

@@ -27,7 +27,7 @@ $color-white: rgb(255, 255, 255);
 }
 
 .info-date {
-  color: $color-text-tertiary;
+  color: $color-tertiary;
   font-size: 1rem;
   margin-bottom: 0.6rem;
 }
@@ -43,7 +43,7 @@ $color-white: rgb(255, 255, 255);
   cursor: pointer;
   
   &:hover {
-    color: $color-text-accent;
+    color: $color-accent;
     
     svg {
       opacity: 1;
@@ -53,7 +53,7 @@ $color-white: rgb(255, 255, 255);
   svg {
     width: 1rem;
     height: 1rem;
-    color: $color-text-accent;
+    color: $color-accent;
     opacity: 0;
   }
 }
@@ -79,12 +79,12 @@ $color-white: rgb(255, 255, 255);
 }
 
 .nav-item.active {
-  color: $color-text-accent;
+  color: $color-accent;
   font-weight: 500;
 }
 
 .nav-item.active .nav-number {
-  color: $color-text-accent;
+  color: $color-accent;
 }
 
 .nav-item:not(.active):hover {
