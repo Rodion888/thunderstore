@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, HostListener, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, HostListener, OnInit, OnDestroy, signal, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
@@ -11,7 +11,7 @@ import { TranslationService, Language } from '../../core/services/translation.se
 import { Product } from '../../core/types/product.types';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { LoaderComponent } from '../../shared/components/loader/loader.component';
-import { of, delay, tap, expand, takeWhile } from 'rxjs';
+import { of, delay, tap, expand, takeWhile, takeUntil, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -28,13 +28,16 @@ import { of, delay, tap, expand, takeWhile } from 'rxjs';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   private productService = inject(ProductService);
   private cartService = inject(CartService);
   private cdr = inject(ChangeDetectorRef);
+  private platformId = inject(PLATFORM_ID);
 
   public currencyService = inject(CurrencyService);
   public translationService = inject(TranslationService);
+
+  private destroy$ = new Subject<void>();
 
   loading = this.productService.loading;
   loadingMore = this.productService.loadingMore;
@@ -55,21 +58,43 @@ export class HomeComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    of(null).pipe(
-        delay(1000),
-        tap(() => {
-          this.showLoader.set(false);
-          this.cdr.markForCheck();
-        }),
-        delay(100),
-        tap(() => this.startProductAnimation())
-      ).subscribe();
+    if (!isPlatformBrowser(this.platformId)) {
+      this.showLoader.set(false);
+      this.visibleProductsCount.set(this.products().length);
+      return;
+    }
+
+    const hasProducts = this.products().length > 0;
+    
+    if (hasProducts) {
+      this.showLoader.set(false);
+      this.startProductAnimation();
+    } else {
+      of(null).pipe(
+          takeUntil(this.destroy$),
+          delay(1000),
+          tap(() => {
+            this.showLoader.set(false);
+            this.cdr.markForCheck();
+          }),
+          delay(100),
+          tap(() => this.startProductAnimation())
+        ).subscribe();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private startProductAnimation(): void {
     const totalProducts = this.products().length;
     
+    if (totalProducts === 0) return;
+    
     of(0).pipe(
+        takeUntil(this.destroy$),
         expand(currentIndex => 
           currentIndex < totalProducts - 1 
             ? of(currentIndex + 1).pipe(delay(200))
@@ -108,6 +133,7 @@ export class HomeComponent implements OnInit {
       this.productService.loadMoreProducts();
       
       of(null).pipe(
+          takeUntil(this.destroy$),
           delay(100),
           tap(() => this.continueProductAnimation(currentVisibleCount))
         ).subscribe();
@@ -118,6 +144,7 @@ export class HomeComponent implements OnInit {
     const totalProducts = this.products().length;
     
     of(startIndex).pipe(
+        takeUntil(this.destroy$),
         expand(currentIndex => 
           currentIndex < totalProducts - 1 
             ? of(currentIndex + 1).pipe(delay(200))

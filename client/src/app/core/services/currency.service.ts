@@ -1,6 +1,7 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal, PLATFORM_ID } from '@angular/core';
 import { catchError, of, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { isPlatformBrowser } from '@angular/common';
 
 export type Currency = 'RUB' | 'USD';
 
@@ -14,6 +15,7 @@ interface StoredExchangeRate {
 })
 export class CurrencyService {
   private http = inject(HttpClient);
+  private platformId = inject(PLATFORM_ID);
   
   private fallbackExchangeRate = 90;
   
@@ -31,8 +33,12 @@ export class CurrencyService {
   }
 
   private initCurrency(): void {
-    const savedCurrency = localStorage.getItem(this.CURRENCY_STORAGE_KEY) as Currency;
-    this.currency.set(savedCurrency || 'RUB');
+    if (isPlatformBrowser(this.platformId)) {
+      const savedCurrency = localStorage.getItem(this.CURRENCY_STORAGE_KEY) as Currency;
+      this.currency.set(savedCurrency || 'RUB');
+    } else {
+      this.currency.set('RUB');
+    }
   }
 
   private initExchangeRate(): void {
@@ -50,16 +56,21 @@ export class CurrencyService {
   }
   
   private getStoredExchangeRate(): StoredExchangeRate | null {
-    const storedData = localStorage.getItem(this.STORAGE_KEY);
-    return storedData ? JSON.parse(storedData) : null;
+    if (isPlatformBrowser(this.platformId)) {
+      const storedData = localStorage.getItem(this.STORAGE_KEY);
+      return storedData ? JSON.parse(storedData) : null;
+    }
+    return null;
   }
   
   private storeExchangeRate(rate: number): void {
-    const data: StoredExchangeRate = {
-      rate,
-      timestamp: Date.now()
-    };
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+    if (isPlatformBrowser(this.platformId)) {
+      const data: StoredExchangeRate = {
+        rate,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+    }
   }
 
   fetchExchangeRate(): void {
@@ -77,7 +88,9 @@ export class CurrencyService {
 
   setCurrency(currency: Currency): void {
     this.currency.set(currency);
-    localStorage.setItem(this.CURRENCY_STORAGE_KEY, currency);
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem(this.CURRENCY_STORAGE_KEY, currency);
+    }
   }
 
   convertPrice(priceInRub: number, targetCurrency: Currency = this.currency()): number {

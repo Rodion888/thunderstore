@@ -10,22 +10,17 @@ export class ProductService {
 
   private page = 1;
   private limit = 10;
-  private totalProducts = 0;
-
+  private isLoaded = false;
+  
   products = signal<Product[]>([]);
   loading = signal<boolean>(true);
   loadingMore = signal<boolean>(false);
   hasMore = signal<boolean>(true);
 
   constructor() {
-    this.fetchTotalProducts();
-  }
-
-  private fetchTotalProducts() {
-    this.productApi.getTotal().subscribe(response => {
-      this.totalProducts = response.total;
+    if (!this.isLoaded) {
       this.loadProducts();
-    });
+    }
   }
 
   private loadProducts() {
@@ -34,8 +29,9 @@ export class ProductService {
         this.products.set(response.products);
         this.loading.set(false);
         this.page++;
-
-        if (this.products().length >= this.totalProducts) {
+        this.isLoaded = true;
+        
+        if (response.products.length < this.limit) {
           this.hasMore.set(false);
         }
       });
@@ -55,7 +51,7 @@ export class ProductService {
           this.page++;
         }
 
-        if (this.products().length >= this.totalProducts) {
+        if (response.products.length < this.limit) {
           this.hasMore.set(false);
         }
 

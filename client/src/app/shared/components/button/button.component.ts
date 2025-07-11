@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, HostListener, Input, Output, inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-button',
@@ -13,6 +14,8 @@ export class ButtonComponent {
   @Input() text: string = '';
 
   @Output() buttonClick = new EventEmitter<void>();
+  
+  private platformId = inject(PLATFORM_ID);
 
   handleClick() {
     this.buttonClick.emit();
@@ -20,6 +23,10 @@ export class ButtonComponent {
   
   @HostListener('mousemove', ['$event'])
   handleMouseMove(event: MouseEvent) {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+    
     const button = event.target as HTMLElement;
     const rect = button.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 100;

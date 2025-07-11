@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 export type Language = 'RU' | 'EN';
 
@@ -6,6 +7,8 @@ export type Language = 'RU' | 'EN';
   providedIn: 'root'
 })
 export class TranslationService {  
+  private platformId = inject(PLATFORM_ID);
+  
   public currentLang = signal<Language>('RU');
 
   private readonly LANGUAGE_STORAGE_KEY = 'language';
@@ -130,24 +133,25 @@ export class TranslationService {
   }
 
   private initLanguage(): void {
-    const initialLang = localStorage.getItem(this.LANGUAGE_STORAGE_KEY) as Language;
-    this.setLanguage(initialLang || 'RU');
+    if (isPlatformBrowser(this.platformId)) {
+      const initialLang = localStorage.getItem(this.LANGUAGE_STORAGE_KEY) as Language;
+      this.setLanguage(initialLang || 'RU');
+    } else {
+      this.setLanguage('RU');
+    }
   }
 
   setLanguage(lang: Language): void {
     if (this.currentLang() !== lang) {
       this.currentLang.set(lang);
-      localStorage.setItem(this.LANGUAGE_STORAGE_KEY, lang);
+      if (isPlatformBrowser(this.platformId)) {
+        localStorage.setItem(this.LANGUAGE_STORAGE_KEY, lang);
+      }
     }
   }
 
-  translate(key: string, defaultValue: string = key): string {
+  translate(key: string): string {
     const lang = this.currentLang();
-    
-    if (this.translations[lang]?.[key]) {
-      return this.translations[lang][key];
-    }
-    
-    return defaultValue;
+    return this.translations[lang]?.[key] || key;
   }
 } 

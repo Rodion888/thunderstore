@@ -54,8 +54,15 @@ fastify.setErrorHandler(async (error, request, reply) => {
 
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:4200';
 
+const getAllowedOrigins = () => {
+  if (process.env.NODE_ENV === 'development') {
+    return ['http://localhost:4200', 'http://localhost:4000'];
+  }
+  return CORS_ORIGIN;
+};
+
 fastify.register(fastifyCors, {
-  origin: CORS_ORIGIN,
+  origin: getAllowedOrigins(),
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,

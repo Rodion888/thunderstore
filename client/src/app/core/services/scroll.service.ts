@@ -1,4 +1,5 @@
-import { Injectable, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Injectable, ElementRef, ChangeDetectorRef, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 export interface VisibleSection {
   index: number;
@@ -14,6 +15,8 @@ export enum ScrollDirection {
   providedIn: 'root'
 })
 export class ScrollService {
+  private platformId = inject(PLATFORM_ID);
+  
   private isScrollingProgrammatically = false;
   private lastScrollTop = 0;
   private scrollingDirection: ScrollDirection = ScrollDirection.DOWN;
@@ -24,6 +27,9 @@ export class ScrollService {
   readonly SCROLL_ANIMATION_DURATION = 500;
 
   detectMobileDevice(): boolean {
+    if (!isPlatformBrowser(this.platformId)) {
+      return false;
+    }
     const userAgent = navigator.userAgent || '';
     return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
   }
@@ -110,7 +116,11 @@ export class ScrollService {
     return null;
   }
 
-  getVisibleSections(container: HTMLElement, sections: ElementRef[]): VisibleSection[] {
+  private getVisibleSections(container: HTMLElement, sections: ElementRef[]): VisibleSection[] {
+    if (!isPlatformBrowser(this.platformId)) {
+      return [];
+    }
+    
     const containerRect = container.getBoundingClientRect();
     const result: VisibleSection[] = [];
     
@@ -133,6 +143,11 @@ export class ScrollService {
   }
 
   scrollToSection(section: ElementRef, callback?: () => void): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      if (callback) callback();
+      return;
+    }
+    
     this.isScrollingProgrammatically = true;
     
     section.nativeElement.scrollIntoView({

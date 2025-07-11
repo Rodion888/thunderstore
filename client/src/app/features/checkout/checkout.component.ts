@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, QueryList, ViewChild, ViewChildren, inject, AfterViewInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, QueryList, ViewChild, ViewChildren, inject, AfterViewInit, OnDestroy, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { CustomFieldComponent } from '../../shared/components/custom-field/custom-field.component';
@@ -13,6 +13,7 @@ import { Subject } from 'rxjs';
 import { ScrollService } from '../../core/services/scroll.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { TranslationService } from '../../core/services/translation.service';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-checkout',
@@ -36,6 +37,7 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private scrollService = inject(ScrollService);
   private translationService = inject(TranslationService);
+  private platformId = inject(PLATFORM_ID);
 
   @ViewChild('checkoutForm') checkoutFormRef!: ElementRef;
   @ViewChildren('section0, section1, section2') sections!: QueryList<ElementRef>;
@@ -137,7 +139,9 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
     }).subscribe({
       next: (response) => {
         if (response.paymentUrl) {
-          window.location.href = response.paymentUrl;
+          if (isPlatformBrowser(this.platformId)) {
+            window.location.href = response.paymentUrl;
+          }
         } else {
           console.log(response);
         }

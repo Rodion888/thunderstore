@@ -1,7 +1,8 @@
-import { Component, AfterViewInit, ElementRef, ViewChild, HostListener, ChangeDetectionStrategy, OnDestroy, inject } from '@angular/core';
+import { Component, AfterViewInit, ElementRef, ViewChild, HostListener, ChangeDetectionStrategy, OnDestroy, inject, PLATFORM_ID } from '@angular/core';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { Router } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
 
 import * as THREE from 'three';
 
@@ -15,6 +16,7 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
   @ViewChild('logoCanvas') private readonly canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private readonly router = inject(Router);
+  private readonly platformId = inject(PLATFORM_ID);
 
   // Three.js objects
   private mesh: THREE.Mesh | null = null;
@@ -53,27 +55,41 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
   };
 
   ngAfterViewInit(): void {
-    this.initScene();
-    this.initLights();
-    this.loadText();
+    if (isPlatformBrowser(this.platformId)) {
+      this.initScene();
+      this.initLights();
+      this.loadText();
+    }
   }
   
   ngOnDestroy(): void {
-    if (this.animationId !== null) {
+    if (isPlatformBrowser(this.platformId) && this.animationId !== null) {
       cancelAnimationFrame(this.animationId);
     }
     
-    if (this.renderer) {
+    if (isPlatformBrowser(this.platformId) && this.renderer) {
       this.renderer.dispose();
     }
     
-    if (this.mesh) {
+    if (isPlatformBrowser(this.platformId) && this.mesh) {
       this.mesh.geometry.dispose();
-      (this.mesh.material as THREE.Material).dispose();
+      if (this.mesh.material instanceof THREE.Material) {
+        this.mesh.material.dispose();
+      }
     }
+    
+    this.lights.forEach(light => {
+      if (this.scene && light) {
+        this.scene.remove(light);
+      }
+    });
   }
 
   private initScene(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     const canvas = this.canvasRef.nativeElement;
     const { clientWidth: width, clientHeight: height } = canvas;
 
@@ -95,6 +111,9 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
   }
 
   private initLights(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
     // Ambient light for base illumination
     const ambientLight = new THREE.AmbientLight(
       this.LIGHT_CONFIG.ambient.color,
@@ -128,6 +147,9 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
   }
 
   private loadText(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
     const loader = new FontLoader();
     loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
       const geometry = new TextGeometry('thunder', {
@@ -174,6 +196,9 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
   }
 
   private startAnimation(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
     const animate = () => {
       this.animationId = requestAnimationFrame(animate);
       
@@ -196,7 +221,7 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
   }
 
   private checkTextIntersection(event: MouseEvent | Touch): boolean {
-    if (!this.mesh || !this.group) return false;
+    if (!isPlatformBrowser(this.platformId) || !this.mesh || !this.group) return false;
     
     const rect = this.canvasRef.nativeElement.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -212,6 +237,9 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('click', ['$event'])
   onClick(event: MouseEvent): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
     const clickDuration = Date.now() - this.dragStartTime;
     if (!this.mouseMoved && clickDuration < this.CLICK_THRESHOLD) {
       if (this.checkTextIntersection(event)) {
@@ -222,6 +250,9 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
     this.isDragging = true;
     this.dragStartTime = Date.now();
     this.mouseMoved = false;
@@ -233,12 +264,15 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('window:mouseup')
   onMouseUp(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
     this.isDragging = false;
   }
 
   @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent): void {
-    if (!this.isDragging || !this.group) return;
+    if (!isPlatformBrowser(this.platformId) || !this.isDragging || !this.group) return;
 
     const deltaMove = {
       x: event.clientX - this.previousMousePosition.x,
@@ -249,8 +283,10 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
       this.mouseMoved = true;
     }
 
-    this.group.rotation.x += deltaMove.y * this.ROTATION_SPEED;
-    this.group.rotation.y += deltaMove.x * this.ROTATION_SPEED;
+    if (this.group) {
+      this.group.rotation.x += deltaMove.y * this.ROTATION_SPEED;
+      this.group.rotation.y += deltaMove.x * this.ROTATION_SPEED;
+    }
 
     this.previousMousePosition = {
       x: event.clientX,
@@ -260,7 +296,7 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
   
   @HostListener('touchstart', ['$event'])
   onTouchStart(event: TouchEvent): void {
-    if (event.touches.length !== 1) return;
+    if (!isPlatformBrowser(this.platformId) || event.touches.length !== 1) return;
     
     event.preventDefault();
     const touch = event.touches[0];
@@ -276,7 +312,7 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
   
   @HostListener('touchmove', ['$event'])
   onTouchMove(event: TouchEvent): void {
-    if (!this.isDragging || !this.group || event.touches.length !== 1) return;
+    if (!isPlatformBrowser(this.platformId) || !this.isDragging || event.touches.length !== 1) return;
     
     event.preventDefault();
     const touch = event.touches[0];
@@ -290,8 +326,10 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
       this.mouseMoved = true;
     }
     
-    this.group.rotation.x += deltaMove.y * this.ROTATION_SPEED;
-    this.group.rotation.y += deltaMove.x * this.ROTATION_SPEED;
+    if (this.group) {
+      this.group.rotation.x += deltaMove.y * this.ROTATION_SPEED;
+      this.group.rotation.y += deltaMove.x * this.ROTATION_SPEED;
+    }
     
     this.previousMousePosition = {
       x: touch.clientX,
@@ -301,7 +339,7 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
   
   @HostListener('touchend', ['$event'])
   onTouchEnd(event: TouchEvent): void {
-    if (!this.isDragging) return;
+    if (!isPlatformBrowser(this.platformId) || !this.isDragging) return;
     
     event.preventDefault();
     this.isDragging = false;
