@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, HostListener, OnInit, OnDestroy, signal, PLATFORM_ID } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, HostListener, OnInit, signal, PLATFORM_ID, DestroyRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
@@ -11,7 +11,8 @@ import { TranslationService, Language } from '../../core/services/translation.se
 import { Product } from '../../core/types/product.types';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { LoaderComponent } from '../../shared/components/loader/loader.component';
-import { of, delay, tap, expand, takeWhile, takeUntil, Subject } from 'rxjs';
+import { of, delay, tap, expand, takeWhile } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-home',
@@ -28,16 +29,15 @@ import { of, delay, tap, expand, takeWhile, takeUntil, Subject } from 'rxjs';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeComponent implements OnInit, OnDestroy {
+export class HomeComponent implements OnInit {
   private productService = inject(ProductService);
   private cartService = inject(CartService);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
   private platformId = inject(PLATFORM_ID);
 
   public currencyService = inject(CurrencyService);
   public translationService = inject(TranslationService);
-
-  private destroy$ = new Subject<void>();
 
   loading = this.productService.loading;
   loadingMore = this.productService.loadingMore;
@@ -58,20 +58,19 @@ export class HomeComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
-    if (!isPlatformBrowser(this.platformId)) {
-      this.showLoader.set(false);
-      this.visibleProductsCount.set(this.products().length);
-      return;
-    }
-
     const hasProducts = this.products().length > 0;
     
     if (hasProducts) {
       this.showLoader.set(false);
-      this.startProductAnimation();
+      this.visibleProductsCount.set(this.products().length);
+      
+      if (isPlatformBrowser(this.platformId)) {
+        this.startProductAnimation();
+      }
     } else {
-      of(null).pipe(
-          takeUntil(this.destroy$),
+      if (isPlatformBrowser(this.platformId)) {
+        of(null).pipe(
+          takeUntilDestroyed(this.destroyRef),
           delay(1000),
           tap(() => {
             this.showLoader.set(false);
@@ -80,12 +79,10 @@ export class HomeComponent implements OnInit, OnDestroy {
           delay(100),
           tap(() => this.startProductAnimation())
         ).subscribe();
+      } else {
+        this.showLoader.set(false);
+      }
     }
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private startProductAnimation(): void {
@@ -94,7 +91,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (totalProducts === 0) return;
     
     of(0).pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         expand(currentIndex => 
           currentIndex < totalProducts - 1 
             ? of(currentIndex + 1).pipe(delay(200))
@@ -108,16 +105,11 @@ export class HomeComponent implements OnInit, OnDestroy {
       ).subscribe();
   }
 
-  onCurrencyChange(currency: string): void {
-    this.currencyService.setCurrency(currency as Currency);
-    this.cdr.markForCheck();
-  }
-  
-  onLanguageChange(language: string): void {
-    this.translationService.setLanguage(language as Language);
-    this.cdr.markForCheck();
+  addToCart(product: Product, size: string) {
+    this.cartService.addToCart(product, size);
   }
 
+  @HostListener('window:scroll', ['$event'])
   onScroll(event: Event): void {
     const element = event.target as HTMLElement;
     
@@ -133,7 +125,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.productService.loadMoreProducts();
       
       of(null).pipe(
-          takeUntil(this.destroy$),
+          takeUntilDestroyed(this.destroyRef),
           delay(100),
           tap(() => this.continueProductAnimation(currentVisibleCount))
         ).subscribe();
@@ -144,7 +136,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     const totalProducts = this.products().length;
     
     of(startIndex).pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         expand(currentIndex => 
           currentIndex < totalProducts - 1 
             ? of(currentIndex + 1).pipe(delay(200))
@@ -158,20 +150,11 @@ export class HomeComponent implements OnInit, OnDestroy {
       ).subscribe();
   }
 
-  @HostListener('window:pagehide')
-  onPageHide() {
-    this.cartService.clearCart();
+  onCurrencyChange(currency: string) {
+    this.currencyService.setCurrency(currency as Currency);
   }
 
-  addToCart(product: Product, size: string) {
-    if (!size) return;
-    
-    this.cartService.addToCart(product, size);
-  }
-  
-  isOutOfStock(product: Product): boolean {
-    return Object.values(product.stock).every(qty => qty === 0);
+  onLanguageChange(language: string) {
+    this.translationService.setLanguage(language as Language);
   }
 }
-
-export default HomeComponent;

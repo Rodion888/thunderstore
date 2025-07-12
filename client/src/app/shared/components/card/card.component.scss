@@ -12,12 +12,22 @@
 .card-container a {
   width: 100%;
   display: block;
+  position: relative;
 }
 
 .card-container img {
   width: 100%;
-  max-height: 12rem;
+  height: auto;
   object-fit: contain;
+  transition: opacity 0.3s ease;
+}
+
+.image-skeleton {
+  width: 100%;
+  aspect-ratio: 256/210;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .product-info {

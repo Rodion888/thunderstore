@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, QueryList, ViewChild, ViewChildren, inject, AfterViewInit, OnDestroy, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, QueryList, ViewChild, ViewChildren, inject, AfterViewInit, OnDestroy, ChangeDetectorRef, PLATFORM_ID, DestroyRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { CustomFieldComponent } from '../../shared/components/custom-field/custom-field.component';
@@ -14,6 +14,7 @@ import { ScrollService } from '../../core/services/scroll.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { TranslationService } from '../../core/services/translation.service';
 import { isPlatformBrowser } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-checkout',
@@ -30,7 +31,7 @@ import { isPlatformBrowser } from '@angular/common';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CheckoutComponent implements AfterViewInit, OnDestroy {
+export class CheckoutComponent implements AfterViewInit {
   private fb = inject(FormBuilder);
   private orderService = inject(OrderService);
   private paymentService = inject(PaymentService);
@@ -38,6 +39,7 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
   private scrollService = inject(ScrollService);
   private translationService = inject(TranslationService);
   private platformId = inject(PLATFORM_ID);
+  private destroyRef = inject(DestroyRef);
 
   @ViewChild('checkoutForm') checkoutFormRef!: ElementRef;
   @ViewChildren('section0, section1, section2') sections!: QueryList<ElementRef>;
@@ -45,8 +47,6 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
   activeTab = 0;
   showErrors = false;
   
-  private destroy$ = new Subject<void>();
-
   deliveryOptions = Object.entries(DeliveryOptions).map(([key, value]) => ({ value: key, label: value }));
   paymentOptions = Object.entries(PaymentOptions).map(([key, value]) => ({ value: key, label: value }));
 
@@ -63,11 +63,6 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     setTimeout(() => this.setupScrollListener(), 300);
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private setupScrollListener(): void {
@@ -114,7 +109,9 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
     if (this.checkoutFormGroup.valid) {
       const orderData = this.checkoutFormGroup.value;
       
-      this.orderService.createOrder(orderData).subscribe({
+      this.orderService.createOrder(orderData).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
         next: (response: OrderResponse) => {
           if (orderData.paymentMethod === PaymentMethod.CRYPTO) {
             this.processCryptoPayment(response.orderId, orderData.email);
@@ -136,14 +133,14 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
       orderId,
       amount: testAmount,
       email
-    }).subscribe({
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (response) => {
         if (response.paymentUrl) {
           if (isPlatformBrowser(this.platformId)) {
             window.location.href = response.paymentUrl;
           }
-        } else {
-          console.log(response);
         }
       },
       error: (error) => {
@@ -174,5 +171,3 @@ export class CheckoutComponent implements AfterViewInit, OnDestroy {
     this.scrollToSection(firstInvalidSection);
   }
 }
-
-export default CheckoutComponent;

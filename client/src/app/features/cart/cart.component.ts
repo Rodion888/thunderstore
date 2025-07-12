@@ -59,5 +59,3 @@ export class CartComponent {
     return Object.values(groupedItems);
   }
 }
-
-export default CartComponent;

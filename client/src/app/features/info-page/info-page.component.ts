@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, AfterViewInit, ViewChild, ViewChildren, QueryList, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, AfterViewInit, ViewChild, ViewChildren, QueryList, ElementRef, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { ScrollService } from '../../core/services/scroll.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-info-page',
@@ -14,6 +15,7 @@ export class InfoPageComponent implements OnInit, AfterViewInit {
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
   private scrollService = inject(ScrollService);
+  private destroyRef = inject(DestroyRef);
 
   @ViewChild('mainContent') mainContentRef!: ElementRef;
   @ViewChildren('sectionRef') sectionRefs!: QueryList<ElementRef>;
@@ -26,7 +28,9 @@ export class InfoPageComponent implements OnInit, AfterViewInit {
   activeSectionIndex = 0;
 
   ngOnInit() {
-    this.route.params.subscribe(params => {
+    this.route.params.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(params => {
       if (params['section'] && ['contact-us', 'terms', 'privacy'].includes(params['section'])) {
         setTimeout(() => {
           const sectionIndex = this.sections.findIndex(s => s.id === params['section']);
@@ -88,5 +92,3 @@ export class InfoPageComponent implements OnInit, AfterViewInit {
     }
   }
 }
-
-export default InfoPageComponent;

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject, signal, DestroyRef, HostListener } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../core/services/product.service';
@@ -10,7 +10,7 @@ import { CustomSelectComponent, SelectOption } from '../../shared/components/cus
 import { AppCurrencyPipe } from "../../shared/pipes/currency.pipe";
 import { TranslatePipe } from "../../shared/pipes/translate.pipe";
 import { LoaderComponent } from '../../shared/components/loader/loader.component';
-import { of, delay, tap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-product-detail',
@@ -32,6 +32,7 @@ export class ProductDetailComponent implements OnInit {
   private productService = inject(ProductService);
   private cartService = inject(CartService);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
 
   product: Product | null = null;
   selectedSize: string = '';
@@ -44,6 +45,9 @@ export class ProductDetailComponent implements OnInit {
 
   private currentImageIndex: number = 0;
   private images: string[] = [];
+  private touchStartX: number = 0;
+  private touchEndX: number = 0;
+  private minSwipeDistance: number = 50;
 
   prevImage(): void {
     this.currentImageIndex = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
@@ -56,7 +60,9 @@ export class ProductDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe((params) => {
+    this.route.paramMap.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((params) => {
       this.loadProduct(Number(params.get('id')));
     });
   }
@@ -88,39 +94,32 @@ export class ProductDetailComponent implements OnInit {
     this.showLeftSide.set(false);
     this.showRightSide.set(false);
     
-    this.productService.getProductById(id).subscribe({
+    this.productService.getProductById(id).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (product) => {
         if (product) {
           this.product = product;
           this.setupImages();
           this.setupSizes();
-          this.cdr.detectChanges();
-          
+          this.showLoader.set(false);
           this.startContentAnimation();
+          this.cdr.detectChanges();
         }
       },
     });
   }
 
   private startContentAnimation(): void {
-    of(null)
-      .pipe(
-        delay(1000),
-        tap(() => {
-          this.showLoader.set(false);
-          this.cdr.markForCheck();
-        }),
-        delay(100),
-        tap(() => {
-          this.showLeftSide.set(true);
-          this.cdr.markForCheck();
-        }),
-        delay(300),
-        tap(() => {
-          this.showRightSide.set(true);
-          this.cdr.markForCheck();
-        })
-      ).subscribe();
+    setTimeout(() => {
+      this.showLeftSide.set(true);
+      this.cdr.markForCheck();
+      
+      setTimeout(() => {
+        this.showRightSide.set(true);
+        this.cdr.markForCheck();
+      }, 300);
+    }, 100);
   }
 
   private setupImages(): void {
@@ -144,6 +143,27 @@ export class ProductDetailComponent implements OnInit {
       this.selectedSize = this.availableSizes[0].value;
     }
   }
-}
 
-export default ProductDetailComponent;
+  @HostListener('touchstart', ['$event'])
+  onTouchStart(event: TouchEvent): void {
+    this.touchStartX = event.changedTouches[0].screenX;
+  }
+
+  @HostListener('touchend', ['$event'])
+  onTouchEnd(event: TouchEvent): void {
+    this.touchEndX = event.changedTouches[0].screenX;
+    this.handleSwipe();
+  }
+
+  private handleSwipe(): void {
+    const swipeDistance = this.touchEndX - this.touchStartX;
+    
+    if (Math.abs(swipeDistance) > this.minSwipeDistance) {
+      if (swipeDistance > 0) {
+        this.prevImage();
+      } else {
+        this.nextImage();
+      }
+    }
+  }
+}

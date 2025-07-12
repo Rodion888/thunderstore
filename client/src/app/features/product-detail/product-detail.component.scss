@@ -59,8 +59,10 @@
   aspect-ratio: 1;
 
   .product-image {
-    width: 94%;
-    height: 94%;
+    max-width: 94%;
+    max-height: 94%;
+    width: auto;
+    height: auto;
     object-fit: contain;
     border-radius: 12px;
     cursor: zoom-in;
@@ -133,17 +135,23 @@
 
 .fullscreen-overlay {
   position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: $color-dark;
   z-index: 9999;
   cursor: zoom-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .fullscreen-image {
-  width: 100vw;
-  height: 100vh;
+  max-width: 90vw;
+  max-height: 90vh;
   object-fit: contain;
   animation: zoomIn 0.3s ease-out;
-  cursor: zoom-out;
 }
 
 @keyframes fadeInUp {

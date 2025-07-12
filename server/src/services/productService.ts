@@ -21,7 +21,7 @@ function orderStockSizes(product: Product): Product {
 
 async function getProducts(): Promise<Product[]> {
   try {
-    const result = await pool.query('SELECT * FROM products');
+    const result = await pool.query('SELECT * FROM products ORDER BY id ASC');
     return result.rows.map(orderStockSizes);
   } catch (error) {
     console.error('Ошибка при получении товаров:', error);

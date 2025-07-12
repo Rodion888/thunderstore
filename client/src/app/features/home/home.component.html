@@ -1,39 +1,39 @@
-<div class="cards-list" (scroll)="onScroll($event)">
-  <ng-container *ngIf="showLoader()">
-    <app-loader></app-loader>
-  </ng-container>
-  
-  <ng-container *ngIf="!showLoader()">
+<div class="home-container">
+  <div class="cards-list" (scroll)="onScroll($event)">
+    <ng-container *ngIf="showLoader()">
+      <app-loader></app-loader>
+    </ng-container>
+    
     <ng-container *ngFor="let product of products(); let i = index">
       <app-card 
-        [product]="product" 
-        [class.card-animate-in]="i < visibleProductsCount()"
-        [class.card-hidden]="i >= visibleProductsCount()">
+        [product]="product"
+        [class.card-animate-in]="!showLoader() && i < visibleProductsCount()"
+        [class.card-hidden]="!showLoader() && i >= visibleProductsCount()">
       </app-card>
     </ng-container>
-  </ng-container>
-</div>
-
-<div class="footer text-default">
-  <div class="footer-links">
-    <span [routerLink]="['/info/contact-us']">{{ 'contact-us' | translate }}</span>
-    <span [routerLink]="['/info/terms']">{{ 'terms' | translate }}</span>
-    <span [routerLink]="['/info/privacy']">{{ 'privacy' | translate }}</span>
   </div>
-  <div class="currency-language-selectors">
-    <app-custom-select
-      class="l-c-select"
-      [options]="currencyOptions"
-      [value]="currencyService.currency()"
-      [placeholder]="'select-currency' | translate"
-      (valueChange)="onCurrencyChange($event)">
-    </app-custom-select>
-    <app-custom-select
-      class="l-c-select"
-      [options]="languageOptions" 
-      [value]="translationService.currentLang()"
-      [placeholder]="'select-language' | translate"
-      (valueChange)="onLanguageChange($event)">
-    </app-custom-select>
+  
+  <div class="footer text-default">
+    <div class="footer-links">
+      <span [routerLink]="['/info/contact-us']">{{ 'contact-us' | translate }}</span>
+      <span [routerLink]="['/info/terms']">{{ 'terms' | translate }}</span>
+      <span [routerLink]="['/info/privacy']">{{ 'privacy' | translate }}</span>
+    </div>
+    <div class="currency-language-selectors">
+      <app-custom-select
+        class="l-c-select"
+        [options]="currencyOptions"
+        [value]="currencyService.currency()"
+        [placeholder]="'select-currency' | translate"
+        (valueChange)="onCurrencyChange($event)">
+      </app-custom-select>
+      <app-custom-select
+        class="l-c-select"
+        [options]="languageOptions" 
+        [value]="translationService.currentLang()"
+        [placeholder]="'select-language' | translate"
+        (valueChange)="onLanguageChange($event)">
+      </app-custom-select>
+    </div>
   </div>
 </div>

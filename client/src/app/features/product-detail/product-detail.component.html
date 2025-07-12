@@ -12,7 +12,7 @@
       <app-button type="arrow-right" class="arrow right" (buttonClick)="nextImage()"></app-button>
     </div>
 
-    <div class="product-info" 
+    <div class="product-info"
          [class.content-animate-in]="showRightSide()"
          [class.content-hidden]="!showRightSide()">
       <span class="title">{{ product.name | translate }}</span>

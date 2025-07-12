@@ -1,12 +1,14 @@
-import { Injectable, inject, signal } from "@angular/core";
+import { Injectable, inject, signal, DestroyRef } from "@angular/core";
 import { Product } from "../types/product.types";
 import { ProductApi } from "../api/product.api";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
   private productApi = inject(ProductApi);
+  private destroyRef = inject(DestroyRef);
 
   private page = 1;
   private limit = 10;
@@ -24,17 +26,18 @@ export class ProductService {
   }
 
   private loadProducts() {
-    this.productApi.getProducts(this.limit, this.page)
-      .subscribe(response => {
-        this.products.set(response.products);
-        this.loading.set(false);
-        this.page++;
-        this.isLoaded = true;
-        
-        if (response.products.length < this.limit) {
-          this.hasMore.set(false);
-        }
-      });
+    this.productApi.getProducts(this.limit, this.page).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(response => {
+      this.products.set(response.products);
+      this.loading.set(false);
+      this.page++;
+      this.isLoaded = true;
+      
+      if (response.products.length < this.limit) {
+        this.hasMore.set(false);
+      }
+    });
   }
 
   loadMoreProducts() {
@@ -44,19 +47,20 @@ export class ProductService {
 
     this.loadingMore.set(true);
 
-    this.productApi.getProducts(this.limit, this.page)
-      .subscribe(response => {
-        if (response.products.length) {
-          this.products.update(products => [...products, ...response.products]);
-          this.page++;
-        }
+    this.productApi.getProducts(this.limit, this.page).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(response => {
+      if (response.products.length) {
+        this.products.update(products => [...products, ...response.products]);
+        this.page++;
+      }
 
-        if (response.products.length < this.limit) {
-          this.hasMore.set(false);
-        }
+      if (response.products.length < this.limit) {
+        this.hasMore.set(false);
+      }
 
-        this.loadingMore.set(false);
-      });
+      this.loadingMore.set(false);
+    });
   }
 
   getProductById(id: number) {

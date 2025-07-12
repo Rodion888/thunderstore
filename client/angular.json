@@ -28,6 +28,7 @@
             "assets": [
               "src/assets",
               "src/assets/static",
+              "src/assets/fonts",
               "src/assets/env.js"
             ],
             "styles": [

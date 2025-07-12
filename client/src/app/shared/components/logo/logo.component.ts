@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ElementRef, ViewChild, HostListener, ChangeDetectionStrategy, OnDestroy, inject, PLATFORM_ID } from '@angular/core';
+import { Component, AfterViewInit, ElementRef, ViewChild, HostListener, ChangeDetectionStrategy, OnDestroy, inject, PLATFORM_ID, NgZone } from '@angular/core';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { Router } from '@angular/router';
@@ -17,6 +17,7 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
 
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly ngZone = inject(NgZone);
 
   // Three.js objects
   private mesh: THREE.Mesh | null = null;
@@ -179,6 +180,7 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
       
       if (this.group) {
         this.group.add(this.mesh);
+        this.group.rotation.x = 0.22;
       }
 
       this.startAnimation();
@@ -199,25 +201,27 @@ export class LogoComponent implements AfterViewInit, OnDestroy {
     if (!isPlatformBrowser(this.platformId)) {
       return;
     }
-    const animate = () => {
-      this.animationId = requestAnimationFrame(animate);
-      
-      const time = Date.now() * 0.001;
-      
-      // Light animation
-      for (let i = 1; i < 4; i++) {
-        const light = this.lights[i] as THREE.SpotLight;
-        const baseIntensity = i < 3 ? 8 : 6;
-        const phase = (i - 1) * (Math.PI / 3);
-        const pulseSpeed = 0.5;
-        const pulseAmount = 0.8;
-        light.intensity = baseIntensity + Math.sin(time * pulseSpeed + phase) * pulseAmount;
-      }
+    this.ngZone.runOutsideAngular(() => {
+      const animate = () => {
+        this.animationId = requestAnimationFrame(animate);
+        
+        const time = Date.now() * 0.001;
+        
+        // Light animation
+        for (let i = 1; i < 4; i++) {
+          const light = this.lights[i] as THREE.SpotLight;
+          const baseIntensity = i < 3 ? 8 : 6;
+          const phase = (i - 1) * (Math.PI / 3);
+          const pulseSpeed = 0.5;
+          const pulseAmount = 0.8;
+          light.intensity = baseIntensity + Math.sin(time * pulseSpeed + phase) * pulseAmount;
+        }
 
-      this.renderer.render(this.scene, this.camera);
-    };
+        this.renderer.render(this.scene, this.camera);
+      };
 
-    animate();
+      animate();
+    });
   }
 
   private checkTextIntersection(event: MouseEvent | Touch): boolean {

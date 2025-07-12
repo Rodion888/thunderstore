@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Product } from '../../../core/types/product.types';
@@ -14,4 +14,11 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
 })
 export class CardComponent {
   @Input() product!: Product;
+  @Input() isFirstCard: boolean = false;
+
+  imageLoaded = signal(false);
+
+  onImageLoad() {
+    this.imageLoaded.set(true);
+  }
 }

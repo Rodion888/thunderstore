@@ -1,7 +1,8 @@
-import { inject, Injectable, signal, PLATFORM_ID } from '@angular/core';
+import { inject, Injectable, signal, PLATFORM_ID, DestroyRef } from '@angular/core';
 import { catchError, of, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 export type Currency = 'RUB' | 'USD';
 
@@ -16,6 +17,7 @@ interface StoredExchangeRate {
 export class CurrencyService {
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
+  private destroyRef = inject(DestroyRef);
   
   private fallbackExchangeRate = 90;
   
@@ -75,6 +77,7 @@ export class CurrencyService {
 
   fetchExchangeRate(): void {
     this.http.get<any>(this.API_URL).pipe(
+      takeUntilDestroyed(this.destroyRef),
       tap(response => {
         if (response?.usd?.rub) {
           const rate = response.usd.rub;

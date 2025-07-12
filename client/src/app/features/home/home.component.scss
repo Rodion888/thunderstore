@@ -3,12 +3,14 @@
 :host {
   display: flex;
   justify-content: center;
-
+  align-items: flex-start;
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  padding-top: 6rem;
+  box-sizing: border-box;
   background: $color-dark;
   background: radial-gradient(
     125% 125% at 50% 10%,
@@ -19,16 +21,20 @@
   backdrop-filter: blur(10px);
 }
 
+.home-container {
+  display: flex;
+  flex-direction: column;
+  width: 72.6%;
+  height: 100%;
+  gap: 1rem;
+}
+
 .cards-list::-webkit-scrollbar {
   display: none;
 }
 
 .cards-list {
-  position: fixed;
-  top: 6rem;
-  width: 72.6%;
-  height: calc(100vh - 6rem - 5rem);
-  height: calc(100dvh - 6rem - 5rem);
+  flex-grow: 1;
   box-sizing: border-box;
   padding: 3rem;
   display: grid;
@@ -109,13 +115,13 @@
 }
 
 .footer {
-  position: fixed;
-  bottom: 0.8rem;
   width: 100%;
   height: 3rem;
   display: flex;
   align-items: center;
   z-index: 4;
+  flex-shrink: 0;
+  margin-bottom: 0.8rem;
 }
 
 .footer-links {
@@ -147,10 +153,12 @@
 }
 
 @media (max-width: 548px) {
-  .cards-list {
+  .home-container {
     width: 90%;
-    height: calc(100vh - 6rem - 7rem);
-    height: calc(100dvh - 6rem - 7rem);
+    height: calc(100% - 1rem);
+  }
+  
+  .cards-list {
     padding: 1.5rem;
     gap: 1rem;
     justify-content: center;
@@ -158,13 +166,13 @@
 
   .footer {
     width: 100%;
-    bottom: 0;
     margin-left: 0;
     display: flex;
     flex-direction: column-reverse;
     height: 6rem;
     padding: 0.5rem 1rem;
     box-sizing: border-box;
+    margin-bottom: 0;
   }
 
   .footer-links {
