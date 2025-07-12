@@ -12,14 +12,7 @@ export default async function paymentRoutes(fastify: FastifyInstance): Promise<v
     try {
       const { orderId, amount, email } = request.body;
       
-      const { rows: [order] } = await fastify.pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
-
-      if (!order) {
-        logger.logPaymentCreationError(orderId, 'Order not found');
-        return reply.status(404).send({ error: 'Order not found' });
-      }
-      
-      logger.logPaymentCreation(order);
+      logger.logPaymentCreation(orderId, amount, email);
       
       const API_KEY = process.env.CRYPTO_CLOUD_API_KEY;
       const SHOP_ID = process.env.CRYPTO_CLOUD_SHOP_ID;
@@ -72,9 +65,7 @@ export default async function paymentRoutes(fastify: FastifyInstance): Promise<v
       logger.logWebhookReceived(data);
       
       if (data.status === 'success') {
-        const { rows: [order] } = await fastify.pool.query('SELECT * FROM orders WHERE id = $1', [data.order_id]);
-
-        logger.logPaymentSuccess(data.order_id, data, order);
+        logger.logPaymentSuccess(data.order_id, data);
         try {
           await fastify.pool.query(
             `UPDATE orders SET status = 'paid' WHERE id = $1`,
